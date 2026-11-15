@@ -1,0 +1,16 @@
+{
+  "archive_wrapper_matches_published_package": true,
+  "installed_wrapper_sha256": "0c7c95627029df1a9b7cef2f1d892262446b289b390205205289bcf9cad74ca3",
+  "package_lock_sha256": "45c9ade5af731cd9312dd17be31051831156848ad522313c3df73488048d4ec4",
+  "lifecycle_scripts_executed": false,
+  "optional_dependencies_omitted": true,
+  "zod_override": "4.6.6",
+  "reproducible_npm_ci_passed": true,
+  "mcp_contracts_after_override_passed": true,
+  "ide_mcp_wire_passed": true,
+  "regression_tests_passed": 170,
+  "regression_exit_code": 0,
+  "npm_audit_vulnerabilities": 0,
+  "main_baseline_commit": "b1971dcbe1a315e8eee5d54c3512125e91d765a0",
+  "supervision_stop_button_passed": true
+}

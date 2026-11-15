@@ -3,6 +3,7 @@
 import json
 from pathlib import Path
 import subprocess
+import shutil
 import sys
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -13,13 +14,28 @@ from development.bootstrap_tools import TOOLS, local_environment
 def main():
     folder = TOOLS / "ruflo"
     folder.mkdir(exist_ok=True)
-    (folder / "package.json").write_text(json.dumps({
+    locks = ROOT / "development/locks"
+    pinned_lock = locks / "ruflo-package-lock.json"
+    pinned_manifest = locks / "ruflo-package.json"
+    if pinned_lock.is_file() and pinned_manifest.is_file():
+        shutil.copyfile(pinned_manifest, folder / "package.json")
+        shutil.copyfile(pinned_lock, folder / "package-lock.json")
+        action = "ci"
+    else:
+        raise RuntimeError("Pinned Ruflo manifest and lockfile required; no automatic dependency resolution")
+    expected = {
         "name": "jarvis-ruflo-tools", "version": "1.0.0", "private": True,
         "description": "Approved project-local tooling, separate from the Python environment",
         "dependencies": {"ruflo": "3.77.1"},
-    }, indent=2), encoding="utf-8")
+        # GHSA-mrhx-c7xc-m3w5: upstream's Zod 3 pin is affected. Keep this
+        # project-local override explicit and verify the exposed MCP contracts.
+        "overrides": {"zod": "4.6.6"},
+    }
+    manifest = json.loads((folder / "package.json").read_text(encoding="utf-8"))
+    if manifest.get("dependencies") != expected["dependencies"] or manifest.get("overrides") != expected["overrides"]:
+        raise RuntimeError("Unexpected Ruflo version or security override in pinned manifest")
     arguments = [str(TOOLS / "node/node.exe"), str(TOOLS / "node/node_modules/npm/bin/npm-cli.js"),
-                 "install", "--prefix", str(folder), "--ignore-scripts", "--omit=optional",
+                 action, "--prefix", str(folder), "--ignore-scripts", "--omit=optional",
                  "--no-audit", "--no-fund", "--save-exact", "--registry", "https://registry.npmjs.org"]
     log = TOOLS / "ruflo-install.log"
     with log.open("w", encoding="utf-8") as output:

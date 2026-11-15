@@ -1,0 +1,148 @@
+{
+  "schema_version": 1,
+  "status": "configured_on_demand",
+  "max_active_including_coordinator": 4,
+  "roles": [
+    {
+      "id": "coordinator",
+      "specialty": "Software Architecture",
+      "select_for": [
+        "all_tasks"
+      ],
+      "responsibility": "Analyze evidence, select roles, assign paths, enforce acceptance gates and prepare integration proposal."
+    },
+    {
+      "id": "python",
+      "specialty": "Python Development",
+      "select_for": [
+        "jarvis/core",
+        "jarvis/infrastructure",
+        "run.py",
+        "scripts"
+      ],
+      "responsibility": "Implement scoped Python changes using the existing architecture."
+    },
+    {
+      "id": "ollama",
+      "specialty": "Ollama Integration",
+      "select_for": [
+        "jarvis/brain",
+        "qwen",
+        "local_provider"
+      ],
+      "responsibility": "Validate local model protocols, timeouts and separation of final text from reasoning."
+    },
+    {
+      "id": "voice_recognition",
+      "specialty": "Voice Recognition",
+      "select_for": [
+        "jarvis/voice/audio.py",
+        "jarvis/voice/transcription.py",
+        "jarvis/voice/wake_word.py",
+        "jarvis/voice/session.py"
+      ],
+      "responsibility": "Check PCM, wake word, transcription and listening state transitions."
+    },
+    {
+      "id": "tts",
+      "specialty": "Text-to-Speech",
+      "select_for": [
+        "jarvis/voice/speech.py",
+        "jarvis/voice/pcm.py",
+        "jarvis/voice/windows_synthesis.py"
+      ],
+      "responsibility": "Validate synthesis, playback, cancellation and actual audio envelopes."
+    },
+    {
+      "id": "windows",
+      "specialty": "Windows Automation",
+      "select_for": [
+        "jarvis/tools",
+        "jarvis/infrastructure/windows.py"
+      ],
+      "responsibility": "Review Windows adapters in fixtures; live desktop interaction requires task authorization."
+    },
+    {
+      "id": "browser",
+      "specialty": "Browser Automation",
+      "select_for": [
+        "jarvis/browser",
+        "jarvis/research"
+      ],
+      "responsibility": "Validate browser protocol and fixture behavior without sending to real services."
+    },
+    {
+      "id": "graphics",
+      "specialty": "Three.js and WebGL",
+      "select_for": [
+        "jarvis/ui/neural",
+        "jarvis/ui/neural_geometry.py",
+        "jarvis/ui/brain_renderer.py"
+      ],
+      "responsibility": "Check 3D geometry, shaders, selection and rendering suspension."
+    },
+    {
+      "id": "ui_ux",
+      "specialty": "UI/UX Design",
+      "select_for": [
+        "jarvis/ui",
+        "accessibility",
+        "interaction"
+      ],
+      "responsibility": "Review interaction, readable states, focus, DPI and confirmations."
+    },
+    {
+      "id": "security",
+      "specialty": "Security",
+      "select_for": [
+        "jarvis/security",
+        "permissions",
+        "mcp",
+        "subprocess",
+        "sensitive_changes"
+      ],
+      "responsibility": "Independently review permissions, path boundaries, injection and credentials exposure."
+    },
+    {
+      "id": "testing",
+      "specialty": "Testing",
+      "select_for": [
+        "all_tasks"
+      ],
+      "responsibility": "Run audited relevant tests and record actual exit codes; never infer passing from model text."
+    },
+    {
+      "id": "debugging",
+      "specialty": "Debugging",
+      "select_for": [
+        "reproduced_failure",
+        "traceback",
+        "failed_test"
+      ],
+      "responsibility": "Reproduce a failure, identify its cause and feed bounded repair attempts."
+    },
+    {
+      "id": "documentation",
+      "specialty": "Documentation",
+      "select_for": [
+        "README.md",
+        "docs",
+        "user_visible_changes"
+      ],
+      "responsibility": "Document verified behavior and clearly separate proposed and implemented capabilities."
+    },
+    {
+      "id": "performance",
+      "specialty": "Performance Optimization",
+      "select_for": [
+        "measured_regression",
+        "latency",
+        "memory",
+        "fps"
+      ],
+      "responsibility": "Measure before changing code and compare against a reproducible baseline."
+    }
+  ],
+  "review_assignment": "security for permission or tool changes; otherwise a separate invocation of the relevant specialty",
+  "agents_are_not_active_until": "a real executor starts, produces traceable output, and passes verification"
+}

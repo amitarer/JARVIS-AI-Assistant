@@ -103,6 +103,41 @@ def main():
     if os.name != "nt":
         raise RuntimeError("This approved setup targets native Windows x64")
     (TOOLS / "downloads").mkdir(parents=True, exist_ok=True)
+    pinned = ROOT / "development/locks/portable-tools.json"
+    if not pinned.is_file():
+        raise RuntimeError("Pinned portable-tool manifest required; no automatic updates")
+    records = get_pinned_tools(pinned)
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        futures = {name: pool.submit(install_portable, name, row["url"], row["sha256"], row["archive"],
+                   row["archive"].removesuffix(".zip") + "/" if name == "node" else "")
+                   for name, row in records.items()}
+        manifest = {name: future.result() for name, future in futures.items()}
+    env = local_environment()
+    for executable, arguments in [(TOOLS / "node/node.exe", ["--version"]),
+                                  (TOOLS / "git/cmd/git.exe", ["--version"])]:
+        result = subprocess.run([str(executable), *arguments], env=env, capture_output=True, text=True,
+                                timeout=20, check=True, creationflags=subprocess.CREATE_NO_WINDOW)
+        print(result.stdout.strip(), flush=True)
+    (TOOLS / "installation.json").write_text(json.dumps(manifest, indent=2), encoding="utf-8")
+    return 0
+
+
+def get_pinned_tools(path):
+    """Validate committed versions without querying or selecting newer releases."""
+    records = json.loads(path.read_text(encoding="utf-8"))
+    if set(records) != {"node", "git"}:
+        raise ValueError("Unexpected portable tool inventory")
+    for name, row in records.items():
+        prefix = "https://nodejs.org/dist/" if name == "node" else "https://github.com/git-for-windows/git/releases/download/"
+        if not row["url"].startswith(prefix) or len(row["sha256"]) != 64:
+            raise ValueError("Invalid official archive or SHA-256")
+        if Path(row["archive"]).name != row["archive"] or not row["url"].endswith("/" + row["archive"]):
+            raise ValueError("Invalid portable archive name")
+    return records
+
+
+def discover_releases_for_review():
+    """Read-only helper; newly discovered releases are never installed by startup."""
     node_release = next(row for row in get_json("https://nodejs.org/dist/index.json")
                         if row["version"].startswith("v24.") and row.get("lts"))
     node_version = node_release["version"]
@@ -118,19 +153,8 @@ def main():
     digest = git_asset.get("digest", "")
     if not digest.startswith("sha256:"):
         raise RuntimeError("Official GitHub release has no SHA-256 digest; do not install unchecked")
-    with ThreadPoolExecutor(max_workers=2) as pool:
-        node = pool.submit(install_portable, "node", node_base + node_filename, node_checksum, node_filename,
-                           f"node-{node_version}-win-x64/")
-        git = pool.submit(install_portable, "git", git_asset["browser_download_url"], digest.split(":", 1)[1], git_asset["name"])
-        manifest = {"node": node.result(), "git": git.result()}
-    env = local_environment()
-    for executable, arguments in [(TOOLS / "node/node.exe", ["--version"]),
-                                  (TOOLS / "git/cmd/git.exe", ["--version"])]:
-        result = subprocess.run([str(executable), *arguments], env=env, capture_output=True, text=True,
-                                timeout=20, check=True, creationflags=subprocess.CREATE_NO_WINDOW)
-        print(result.stdout.strip(), flush=True)
-    (TOOLS / "installation.json").write_text(json.dumps(manifest, indent=2), encoding="utf-8")
-    return 0
+    return {"node": {"archive": node_filename, "url": node_base + node_filename, "sha256": node_checksum},
+            "git": {"archive": git_asset["name"], "url": git_asset["browser_download_url"], "sha256": digest.split(":", 1)[1]}}
 
 
 if __name__ == "__main__":

@@ -1,0 +1,10 @@
+# Project-local status bridge. Actual Codex workers are owned by the bounded runner.
+[mcp_servers.ruflo]
+command = 'C:\Users\VGgot\Desktop\JARVIS\.venv\Scripts\python.exe'
+args = ['-B', 'C:\Users\VGgot\Desktop\JARVIS\development\ruflo_mcp_server.py']
+cwd = 'C:\Users\VGgot\Desktop\JARVIS'
+enabled = true
+required = false
+startup_timeout_sec = 120
+tool_timeout_sec = 60
+enabled_tools = ['agent_list', 'agent_status', 'autopilot_progress', 'autopilot_status', 'swarm_health', 'swarm_status', 'jarvis_development_status']

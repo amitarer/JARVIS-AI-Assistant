@@ -1,0 +1,12 @@
+{
+  "name": "jarvis-ruflo-tools",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Approved project-local tooling, separate from the Python environment",
+  "dependencies": {
+    "ruflo": "3.77.1"
+  },
+  "overrides": {
+    "zod": "4.6.6"
+  }
+}

@@ -4,6 +4,11 @@ JARVIS usa **Qwen 3.5 9B tramite Ollama**, chat e memoria SQLite, strumenti Wind
 
 ## Avvio
 
+Per il sistema **Codex + Ruflo**, aprire `Sviluppo_JARVIS.bat`:
+mostra agenti realmente eseguiti, test, revisione, risorse e STOP sviluppo.
+Il primo ciclo isolato è collaudato; l'esecuzione continua resta disattivata.
+Vedi [configurazione e risultati](docs/development-system.md).
+
 Fare doppio clic su **`Avvia_JARVIS.bat`** nella cartella del progetto. Il launcher usa la `.venv`, avvia Ollama in background se non risponde e poi avvia JARVIS senza lasciare aperto il terminale. Funziona anche da un collegamento e con spazi nel percorso. Non scarica modelli; eventuali errori del launcher vengono mostrati in una finestra e registrati, quando possibile, in `data/logs/startup.log`. Ollama avviato dal launcher resta disponibile anche dopo l'uscita da JARVIS.
 
 Per aprire subito la dashboard usare `Avvia_JARVIS.bat --dashboard`; per partire senza microfono usare `Avvia_JARVIS.bat --no-microphone`.

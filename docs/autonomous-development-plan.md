@@ -1,7 +1,11 @@
 # Codex + Ruflo: proposta verificata per JARVIS
 
-Stato: **proposta pronta per approvazione; nessuna installazione o esecuzione
-autonoma avviata**. Data della verifica: 15 novembre 2026.
+Stato aggiornato: **installazione locale e primo ciclo isolato approvati e
+collaudati il 15 novembre 2026**. Risultati, comandi e limiti effettivi:
+[sistema di sviluppo](development-system.md).
+
+Il seguito conserva l'analisi e la proposta precedenti all'approvazione;
+le osservazioni iniziali sull'assenza di Git e Node descrivono quello stato.
 
 La richiesta esplicita è collegare Codex e Ruflo per selezionare agenti,
 sviluppare, testare, revisionare e migliorare. Il documento allegato fornisce i
