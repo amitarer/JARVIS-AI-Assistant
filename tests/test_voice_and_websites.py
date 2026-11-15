@@ -41,18 +41,19 @@ class VoiceAndWebsiteTests(unittest.TestCase):
         self.assertFalse(gate.feed(0.8, 0.0001, 4))
         self.assertTrue(gate.feed(0.8, 0.02, 4.1))
 
-    def test_spoken_follow_up_is_added_once_and_decline_ends_conversation(self):
+    def test_spoken_result_has_no_automatic_follow_up_and_decline_ends_conversation(self):
         message = spoken_reply("Chrome avviato.")
-        self.assertEqual(message, "Chrome avviato.\nHa bisogno d'altro, signore?")
+        self.assertEqual(message, "Chrome avviato.")
         self.assertEqual(spoken_reply(message), message)
+        self.assertEqual(spoken_reply(message + "\nHa bisogno d'altro, signore?"), message)
         self.assertEqual(spoken_control("No, grazie."), "chiudi")
         self.assertEqual(spoken_control("Jarvis, basta."), "chiudi")
         self.assertIsNone(spoken_control("Apri la cartella grazie"))
 
-    def test_long_spoken_result_preserves_follow_up_inside_tts_limit(self):
+    def test_long_spoken_result_respects_tts_limit_without_follow_up(self):
         text = spoken_reply("Dettaglio. " * 400)
         self.assertLessEqual(len(text), 2000)
-        self.assertTrue(text.endswith("Ha bisogno d'altro, signore?"))
+        self.assertNotIn("bisogno d'altro", text)
 
     def test_site_typo_resolves_to_configured_domain_without_keyboard_typing(self):
         with temporary_project() as directory:

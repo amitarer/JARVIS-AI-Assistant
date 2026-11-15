@@ -19,7 +19,7 @@ class BrowserController:
         self.root = root.resolve()
         self.origin = allowed_origin.rstrip("/")
         parsed = urlsplit(self.origin)
-        if self.origin not in {"https://chatgpt.com", "https://www.google.com", "https://docs.google.com"} and not (parsed.scheme == "http" and parsed.hostname == "127.0.0.1"):
+        if self.origin not in {"https://chatgpt.com", "https://www.google.com", "https://docs.google.com", "https://web.whatsapp.com"} and not (parsed.scheme == "http" and parsed.hostname == "127.0.0.1"):
             raise ValueError("Origine browser non autorizzata.")
         self.profile = self.root / "data" / profile_name
         if self.profile.is_symlink() or self.profile.is_junction() or not self.profile.resolve().is_relative_to(self.root / "data"):

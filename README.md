@@ -4,6 +4,12 @@ JARVIS usa **Qwen 3.5 9B tramite Ollama**, chat e memoria SQLite, strumenti Wind
 
 ## Avvio
 
+La versione **0.7.1** aggiunge incarichi operativi in piu' passaggi, letture web
+silenziose e preparazione/invio WhatsApp con conferma del testo esatto.
+Il pulsante **WhatsApp** collega il telefono al profilo dedicato; **Risposte
+vocali ON/OFF** gestisce la voce senza spegnere il microfono. Rimossa la domanda
+finale automatica. Uso e limiti: [autonomia operativa](docs/operational-autonomy.md).
+
 Il pulsante **Modello** mostra lo stato locale Ollama verificato, con contesto
 nativo e runtime distinti, capacità e memoria del modello. Il primo modulo
 di fusione e i suoi limiti sono descritti in [FUSION_PLAN.md](FUSION_PLAN.md)

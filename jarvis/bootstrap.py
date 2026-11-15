@@ -23,6 +23,9 @@ from jarvis.browser.controller import BrowserController
 from jarvis.tools.autonomy import StartAutonomousChatTool, BrowserChatTool
 from jarvis.research.service import ResearchServices
 from jarvis.tools.research import RunResearchTool, ResearchOperationTool
+from jarvis.tools.web_reading import WebReadingTool
+from jarvis.tools.whatsapp import WhatsAppMessageTool, WhatsAppContactTool, ConnectWhatsAppTool
+from jarvis.browser.whatsapp import WhatsAppBrowser
 
 
 def build_controller(root: Path) -> Controller:
@@ -42,11 +45,18 @@ def build_tool_registry(settings: Settings, repository: Repository) -> ToolRegis
         registry.register(SystemInformationTool(system_information, operation))
     catalog = ApplicationCatalog(settings.root)
     registry.register(OpenApplicationTool(settings.applications, catalog))
+    whatsapp = WhatsAppBrowser(settings.root)
+    registry.register(WhatsAppMessageTool(whatsapp))
+    registry.register(WhatsAppMessageTool(whatsapp, send=True))
+    registry.register(WhatsAppContactTool(repository))
+    registry.register(ConnectWhatsAppTool(whatsapp))
     registry.register(ListApplicationsTool(catalog))
     registry.register(OpenResourceTool(WebsiteCatalog(settings.root)))
     registry.register(StartAutonomousChatTool())
     registry.register(RunResearchTool())
     research = ResearchServices(settings.root)
+    for operation in ("search", "fetch"):
+        registry.register(WebReadingTool(research, operation))
     for operation in ("search","fetch","pdf","chatgpt","google_docs"):
         registry.register(ResearchOperationTool(research,operation))
     browser = BrowserController(settings.root)

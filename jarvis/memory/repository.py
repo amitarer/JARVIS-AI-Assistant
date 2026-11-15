@@ -65,6 +65,19 @@ class Repository:
         with self.database.connection() as connection:
             connection.execute("UPDATE tasks SET result_text=?, error_text=? WHERE id=?", (result, error, task_id))
 
+    def set_preference(self, key: str, value) -> None:
+        if key not in {"response_audio", "whatsapp_contacts"}:
+            raise ValueError("Preferenza non disponibile.")
+        if key == "response_audio" and type(value) is not bool:
+            raise ValueError("Stato audio non valido.")
+        if key == "whatsapp_contacts" and (not isinstance(value, dict) or len(value) > 100
+                or any(not isinstance(k, str) or not isinstance(v, str) or not 1 <= len(k) <= 100
+                       or not 1 <= len(v) <= 100 for k, v in value.items())):
+            raise ValueError("Contatti non validi.")
+        with self.database.connection() as connection:
+            connection.execute("INSERT INTO preferences VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value_json=excluded.value_json",
+                               (key, json.dumps(value, ensure_ascii=False)))
+
     def begin_operation(self, task_id: str, tool: str, arguments: dict) -> str:
         operation_id = uuid4().hex
         # Current tools only accept identifiers, search text and limits. Unknown future

@@ -1,6 +1,7 @@
 """UI lifecycle and main-thread-only widget updates."""
 
 import logging
+import re
 from pathlib import Path
 from dataclasses import asdict
 
@@ -16,7 +17,7 @@ from jarvis.ui.workers import TaskWorker
 from jarvis.ui.neural_runtime import create_overlay
 from jarvis.voice.session import VoiceSession, spoken_control
 from jarvis.voice.speech import SpeechOutput
-from jarvis.voice.replies import spoken_reply
+from jarvis.voice.replies import spoken_reply, requests_silence
 from jarvis.infrastructure.settings import validate_voice
 from jarvis.brain.response_text import final_text
 from jarvis.core.verified_reply import has_completion_claim
@@ -41,6 +42,11 @@ class Presenter(QObject):
         self.speech = SpeechOutput(self)
         self.speech.voice_name = controller.settings.voice.voice_name
         self.voice_turn = False
+        self.response_audio = True
+        self.silent_turn = False
+        self.announced_action = False
+        self.web_reading_turn = False
+        self.read_aloud = False
         self.overlay_cycle = False
         self.actions_started = False
         self.autonomy_active = False
@@ -71,6 +77,8 @@ class Presenter(QObject):
         window.listen_requested.connect(self.listen)
         window.overlay_requested.connect(lambda: self.overlay.present("listening", "Anteprima del cervello digitale", preview=True, timeout_ms=5000))
         window.model_status_requested.connect(self.show_model_status)
+        window.response_audio_requested.connect(self.toggle_response_audio)
+        window.whatsapp_requested.connect(lambda: self.start({"kind": "connect_whatsapp"}))
         self.voice.command.connect(self._voice_command)
         self.voice.state.connect(self._voice_state)
         self.voice.level.connect(self._input_level)
@@ -100,6 +108,10 @@ class Presenter(QObject):
         if self.worker is not None or self.closing:
             return
         self.voice_turn = payload.get("kind") == "voice"
+        self.silent_turn = requests_silence(payload.get("text", ""))
+        self.announced_action = False
+        self.web_reading_turn = False
+        self.read_aloud = bool(re.search(r"ad alta voce|leggimel[oa]|leggimi", payload.get("text", ""), re.IGNORECASE))
         self.actions_started = False
         if not self.voice_turn:
             self.overlay_cycle = False
@@ -129,6 +141,8 @@ class Presenter(QObject):
             if self.activity_dialog is not None:
                 self.activity_dialog.set_tasks(event.data["tasks"])
             preferences = event.data["preferences"]
+            self.response_audio = preferences.get("response_audio", True) is True
+            self.window.response_audio_button.setText("Risposte vocali " + ("ON" if self.response_audio else "OFF"))
             self.reduced_motion = preferences.get("reduced_motion", self.controller.settings.reduced_motion)
             self.log_level = preferences.get("log_level", self.controller.settings.log_level)
             self.window.visualizer.set_reduced_motion(self.reduced_motion)
@@ -167,9 +181,11 @@ class Presenter(QObject):
             self.stream_timer.stop()
             self.window.set_stream("")
             self.last_response = final_text(event.data)
-            if self.voice_turn and not self.closing and self.worker and not self.worker.cancellation.is_set():
+            if self._can_speak() and not self.closing and self.worker and not self.worker.cancellation.is_set():
                 self.speech.speak(spoken_reply(self.last_response))
         elif event.kind == "action":
+            if event.data["tool"] in {"search_web", "read_web_page", "research_fetch", "research_search"}:
+                self.web_reading_turn = True
             self.window.action_label.setText("Strumento: " + event.data["tool"])
         elif event.kind == "artifact":
             path = Path(event.data.get("path", "")).resolve()
@@ -215,7 +231,11 @@ class Presenter(QObject):
             intentions["run_research"] = "Avvio la ricerca autorizzata e preparo il PDF. Può interrompermi dicendo stop."
             intention = intentions.get(event.data["tool"], "Eseguo l'operazione autorizzata.")
             self.window.action_label.setText(intention)
-            if not self.voice_turn or not self.speech.speak(intention):
+            announce = (self._can_speak() and not self.announced_action
+                        and event.data["tool"] in {"open_application", "open_resource", "start_autonomous_chat", "run_research"})
+            if announce:
+                self.announced_action = True
+            if not announce or not self.speech.speak(intention):
                 self._release_execution()
         elif event.kind == "approval":
             if self.closing or not self.worker or self.worker.cancellation.is_set():
@@ -258,7 +278,7 @@ class Presenter(QObject):
             self.window.stop_button.setEnabled(True)
         self.stream_timer.stop()
         self.window.set_stream("")
-        if (self.voice_turn and self.had_error and not self.response_received and self.last_notice
+        if (self._can_speak() and self.had_error and not self.response_received and self.last_notice
                 and not self.closing and not was_cancelled and not self.speech.active):
             self.speech.speak(spoken_reply(final_text(self.last_notice)))
         if not self.had_error and not self.speech.active:
@@ -315,6 +335,25 @@ class Presenter(QObject):
             self.window.close()
         elif self.closing:
             self.shutdown_timer.start()
+
+    @Slot()
+    def _can_speak(self):
+        return (self.voice_turn and self.response_audio and not self.silent_turn
+                and (not self.web_reading_turn or self.read_aloud))
+
+    @Slot()
+    def toggle_response_audio(self):
+        value = not self.response_audio
+        try:
+            self.controller.repository.set_preference("response_audio", value)
+        except Exception:
+            self.window.action_label.setText("Impossibile salvare la preferenza audio.")
+            return
+        self.response_audio = value
+        self.window.response_audio_button.setText("Risposte vocali " + ("ON" if value else "OFF"))
+        if not value:
+            self.speech.stop()
+            self._release_execution()
 
     @Slot()
     def show_model_status(self):

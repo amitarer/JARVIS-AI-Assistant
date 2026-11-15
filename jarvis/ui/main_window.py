@@ -29,6 +29,8 @@ class MainWindow(QMainWindow):
     listen_requested = Signal()
     overlay_requested = Signal()
     model_status_requested = Signal()
+    response_audio_requested = Signal()
+    whatsapp_requested = Signal()
 
     def __init__(self):
         super().__init__()
@@ -98,6 +100,10 @@ class MainWindow(QMainWindow):
         self.model_button.setToolTip("Stato locale Ollama, capacità e memoria dichiarate")
         self.model_button.clicked.connect(self.model_status_requested)
         controls.addWidget(self.model_button)
+        self.whatsapp_button = QPushButton("WhatsApp")
+        self.whatsapp_button.setToolTip("Collega WhatsApp al profilo JARVIS; nessun messaggio viene inviato.")
+        self.whatsapp_button.clicked.connect(self.whatsapp_requested)
+        controls.addWidget(self.whatsapp_button)
         stage.addLayout(controls)
         voice_controls = QHBoxLayout()
         self.microphone_button = QPushButton("Microfono OFF")
@@ -106,7 +112,10 @@ class MainWindow(QMainWindow):
         self.listen_button.clicked.connect(self.listen_requested)
         self.overlay_button = QPushButton("Overlay")
         self.overlay_button.clicked.connect(self.overlay_requested)
-        for button in (self.microphone_button, self.listen_button, self.overlay_button):
+        self.response_audio_button = QPushButton("Risposte vocali ON")
+        self.response_audio_button.setToolTip("Disattiva la voce delle risposte; il microfono resta indipendente.")
+        self.response_audio_button.clicked.connect(self.response_audio_requested)
+        for button in (self.microphone_button, self.listen_button, self.overlay_button, self.response_audio_button):
             voice_controls.addWidget(button)
         stage.addLayout(voice_controls)
         unavailable = self.microphone_label = QLabel("MICROFONO OFF · openWakeWord locale")

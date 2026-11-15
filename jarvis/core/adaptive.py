@@ -7,7 +7,7 @@ from jarvis.core.models import UserError
 
 READ_ONLY_TOOLS=frozenset({"get_current_datetime","get_system_information","get_hardware_information",
     "get_memory_information","get_disk_information","get_battery_status","get_process_information",
-    "get_open_applications","list_applications","inspect_files","inspect_desktop","read_operations"})
+    "get_open_applications","list_applications","inspect_files","inspect_desktop","read_operations", "search_web", "read_web_page"})
 
 
 class WorkingMemory:

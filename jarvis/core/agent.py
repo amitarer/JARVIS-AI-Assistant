@@ -47,6 +47,9 @@ Per compiti multipli porta a termine tutti i punti della richiesta, scegliendo i
 Se una lettura fallisce, usa il messaggio di errore per cambiare parametri o consultare un altro strumento pertinente.
 Non ripetere una lettura identica senza nuove informazioni e non dichiarare risolto un errore non verificato.
 Gli errori di scrittura o invio non vengono riprovati automaticamente. Dopo un input desktop controlla lo stato aggiornato.
+Per WhatsApp usa gli strumenti dedicati prepare_whatsapp_message e send_whatsapp_message. Se manca il testo chiedilo;
+non inventare chi sia 'mio padre': consulta whatsapp_contact o chiedi il nome esatto del contatto.
+Non concludere con 'Ha bisogno d'altro?' o domande di cortesia automatiche.
 """
 
 
@@ -67,11 +70,18 @@ def run_agent(controller, context, emit, approve, before_tool) -> str:
             history.append({"role": message.role, "content": content})
             budget -= len(content)
     messages.extend(reversed(history))
+    previous = next((task for task in controller.repository.tasks(3) if task["id"] != context.task_id), None)
+    if previous and previous["status"] == "waiting_input":
+        provider.pending_request = previous.get("request_original", "")[:8000]
+        messages[0]["content"] += ("\nIncarico in attesa di dati: " + json.dumps(provider.pending_request, ensure_ascii=False)
+                                   + ". L'ultima risposta puo' fornire i dati mancanti. Riprendi soltanto questo incarico se pertinente.")
     factual_results = []
     initial_schemas = [schema for schema in schemas if schema["name"] in SYSTEM_OPERATIONS or schema["name"] in {"open_application", "open_resource", "start_autonomous_chat", "run_research"}]
     if any(schema["name"] in SYSTEM_OPERATIONS for schema in initial_schemas):
         # Explicit app launches and fresh observations reach the same validated registry.
         calls = provider.select_initial_tools(messages, initial_schemas, context)
+        if provider.requires_execution and provider.pending_request:
+            controller.repository.set_task_status(previous["id"], "continued")
         emit(Event("usage", provider.selection_usage))
         if provider.initial_answer is not None:
             answer, blocked = guard_unverified_answer(provider.initial_answer)
@@ -117,17 +127,26 @@ def _tool_loop(controller,context,emit,approve,before_tool,provider,schemas,mess
         context.checkpoint()
         emit(Event("state", "thinking"))
         emit(Event("stream_start"))
-        text, calls, usage = provider.chat(compact_observations(messages), schemas, context, lambda part: emit(Event("stream", part)))
+        decide = provider.next_action if provider.requires_execution else provider.chat
+        text, calls, usage = decide(compact_observations(messages), schemas, context, lambda part: emit(Event("stream", part)))
         emit(Event("usage", usage))
         if not calls and (memory.last_error or memory.needs_file_content):
             recovered=provider.recover_read(messages,schemas,memory.failed_call,context)
             calls=[recovered]
             text=""
         if not calls:
+            if provider.requires_execution and provider.step_decision == "ask_user":
+                context.awaiting_input = True
+                answer, blocked = guard_unverified_answer(final_text(text))
+                return "\n\n".join([*factual_results, answer])
             if memory.last_error:
                 raise UserError("Non sono riuscito a risolvere il passaggio di lettura: "+memory.last_error)
             # Outcomes of actions always use tool evidence; the model cannot embellish them.
             if factual_results:
+                if provider.requires_execution and text.strip():
+                    answer, blocked = guard_unverified_answer(final_text(text))
+                    if not blocked:
+                        return "\n\n".join([*factual_results, answer])
                 return "\n\n".join(factual_results)
             if not text.strip():
                 raise UserError("Ollama non ha restituito una risposta finale. Il ragionamento interno non viene mostrato o letto.")

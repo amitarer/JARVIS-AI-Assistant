@@ -169,7 +169,7 @@ class UiTests(unittest.TestCase):
             self.presenter.voice_turn = True
             self.presenter.worker = SimpleNamespace(cancellation=threading.Event())
             self.presenter.on_event(Event("response", "<think>PRIVATE</think>Risposta da leggere."))
-            speak.assert_called_once_with("Risposta da leggere.\nHa bisogno d'altro, signore?")
+            speak.assert_called_once_with("Risposta da leggere.")
             self.presenter.worker = None
             self.presenter.voice_turn = False
 
@@ -179,6 +179,51 @@ class UiTests(unittest.TestCase):
         self.presenter.on_event(Event("execution_barrier", {"ack": ack, "tool": "open_application"}))
         self.assertTrue(ack.is_set())
         self.assertFalse(self.presenter.overlay.isVisible())
+
+    def test_muting_response_audio_persists_and_never_disables_microphone(self):
+        microphone_enabled = self.presenter.voice.enabled
+        with patch.object(self.presenter.speech, "speak") as speak:
+            self.window.response_audio_button.click()
+            self.assertFalse(self.controller.repository.preferences()["response_audio"])
+            self.presenter.voice_turn = True
+            self.presenter.worker = SimpleNamespace(cancellation=threading.Event())
+            self.presenter.on_event(Event("response", "Testo da mostrare senza pronunciarlo."))
+            speak.assert_not_called()
+            self.presenter.worker = None
+            self.presenter.voice_turn = False
+        self.assertEqual(self.presenter.voice.enabled, microphone_enabled)
+
+    def test_reading_barrier_is_silent_and_released_immediately(self):
+        self.presenter.voice_turn = True
+        acknowledgement = threading.Event()
+        with patch.object(self.presenter.speech, "speak") as speak:
+            self.presenter.on_event(Event("execution_barrier", {"tool": "read_web_page", "ack": acknowledgement}))
+        speak.assert_not_called()
+        self.assertTrue(acknowledgement.is_set())
+        self.presenter.voice_turn = False
+
+    def test_explicit_silent_turn_does_not_speak_final_answer(self):
+        self.presenter.voice_turn = True
+        self.presenter.silent_turn = True
+        self.presenter.worker = SimpleNamespace(cancellation=threading.Event())
+        with patch.object(self.presenter.speech, "speak") as speak:
+            self.presenter.on_event(Event("response", "Risultato letto dal sito."))
+        speak.assert_not_called()
+        self.presenter.worker = None
+        self.presenter.voice_turn = False
+
+    def test_website_content_is_silent_unless_reading_aloud_is_explicit(self):
+        self.presenter.voice_turn = True
+        self.presenter.worker = SimpleNamespace(cancellation=threading.Event())
+        with patch.object(self.presenter.speech, "speak") as speak:
+            self.presenter.on_event(Event("action", {"tool": "read_web_page"}))
+            self.presenter.on_event(Event("response", "Contenuto del sito."))
+            speak.assert_not_called()
+            self.presenter.read_aloud = True
+            self.presenter.on_event(Event("response", "Contenuto richiesto ad alta voce."))
+            speak.assert_called_once_with("Contenuto richiesto ad alta voce.")
+        self.presenter.worker = None
+        self.presenter.voice_turn = False
 
     def test_no_overlay_appears_for_background_thinking_without_wake(self):
         self.presenter.voice_turn = True
