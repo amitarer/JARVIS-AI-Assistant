@@ -167,7 +167,11 @@ class BackgroundDesktop(QObject):
                    "threshold": wake.gate.threshold if wake else 1 - voice.settings.sensitivity,
                    "detections": wake.detections if wake else 0,
                    "suspended": bool(wake and wake.suspended.is_set()), "error": wake.last_error if wake else ""},
-                   "overlay_visible": self.presenter.overlay.isVisible(), "last_error": self.last_error}
+                   "overlay_visible": self.presenter.overlay.isVisible(), "last_error": self.last_error,
+                   "interface": {"renderer": type(self.window.visualizer).__name__,
+                                 "webgl_ready": bool(getattr(getattr(self.window.visualizer, "view", None), "initialized", False)),
+                                 "fallback_reason": getattr(self.window.visualizer, "failure", ""),
+                                 "dashboard_visible": self.window.isVisible()}}
         payload["task"]={"active":self.presenter.worker is not None,"autonomy":self.presenter.autonomy_active}
         try:
             root = self.presenter.controller.settings.root

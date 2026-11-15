@@ -8,7 +8,7 @@
   let yaw = -0.88, pitch = 0.28, zoom = 1, rotation = true, reducedMotion = false;
   let particleCount = 0, edgeCount = 0, impulseCount = 0, quality = 1;
   let organic = 0, edgeDivisions = 1, edgeVertexCount = 0, signalClock = 0, errorTint = 0;
-  let maxDpr = 1.5, targetFps = 60, dirtySize = true, lastDraw = 0;
+  let maxDpr = 1.5, targetFps = 60, dirtySize = true, lastDraw = 0, renderIdle = false;
   let selected = -1, graphData = null, selectionBuffers = [], panX = 0, panY = 0;
   let windowStart = 0, frameCount = 0, cpuSum = 0, gpuSum = 0, gpuSamples = 0;
   let slowWindows = 0, fastWindows = 0, gpuExtension = null, queries = [];
@@ -213,6 +213,7 @@
   }
 
   function initialize(graph, options = {}) {
+    renderIdle = options.renderIdle === true;
     if (disposed || stats.ready || gl) return false;
     try {
       maxDpr = Math.max(0.5, Math.min(2, options.pixelRatio || 1.5));
@@ -359,7 +360,7 @@
   }
 
   function setVisible(visible) {
-    const active = Boolean(visible) && !["idle", "executing"].includes(state);
+    const active = Boolean(visible) && state !== "executing" && (state !== "idle" || renderIdle);
     if (active && !running && stats.ready && !disposed && !stats.contextLost) {
       running = true;
       previous = lastDraw = windowStart = frameCount = cpuSum = gpuSum = gpuSamples = 0;
@@ -378,7 +379,7 @@
     state = next;
     audio = audioTarget = 0;
     if (next === "activating" || ["idle", "executing"].includes(old)) reveal = 0;
-    if (["idle", "executing"].includes(next)) setVisible(false);
+    if (next === "executing" || (next === "idle" && !renderIdle)) setVisible(false);
     return true;
   }
 

@@ -1,15 +1,16 @@
 """Desktop shell. No network content is loaded into the conversation view."""
 
 import html
+from pathlib import Path
 
-from PySide6.QtCore import QEvent, Qt, Signal
+from PySide6.QtCore import QEvent, QProcess, Qt, Signal
 from PySide6.QtGui import QCloseEvent, QFont, QKeySequence, QShortcut
 from PySide6.QtWidgets import (QHBoxLayout, QLabel, QLineEdit, QMainWindow,
                                QPushButton, QSizePolicy, QTextBrowser, QVBoxLayout, QWidget)
 
 from jarvis import __version__
 from jarvis.core.models import Message
-from jarvis.ui.visualizer import Visualizer
+from jarvis.ui.neural_runtime import create_visualizer
 
 
 class SafeTranscript(QTextBrowser):
@@ -36,7 +37,7 @@ class MainWindow(QMainWindow):
         self.assistant_name = "JARVIS · DEMO"
         self.ai_configured = False
         self.setWindowTitle("JARVIS · Qwen locale")
-        self.resize(1280, 820)
+        self.resize(1280, 900)
         self.setMinimumSize(1040, 700)
         root = QWidget()
         self.setCentralWidget(root)
@@ -64,8 +65,7 @@ class MainWindow(QMainWindow):
         stage_header = QLabel("01  /  LOCAL CORE")
         stage_header.setObjectName("eyebrow")
         stage.addWidget(stage_header)
-        stage.addStretch(1)
-        self.visualizer = Visualizer()
+        self.visualizer = create_visualizer()
         self.visualizer.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         stage.addWidget(self.visualizer, 5)
         self.state_label = QLabel("IN ATTESA")
@@ -76,7 +76,6 @@ class MainWindow(QMainWindow):
         local.setObjectName("eyebrow")
         local.setAlignment(Qt.AlignmentFlag.AlignCenter)
         stage.addWidget(local)
-        stage.addStretch(1)
         self.action_label = QLabel("Pronto. Digita /aiuto oppure /apri blocco_note.")
         self.action_label.setWordWrap(True)
         self.action_label.setMinimumHeight(55)
@@ -90,6 +89,10 @@ class MainWindow(QMainWindow):
         self.settings_button.clicked.connect(self.settings_requested)
         controls.addWidget(self.activities_button)
         controls.addWidget(self.settings_button)
+        self.agents_button = QPushButton("Agenti")
+        self.agents_button.setToolTip("Stato reale degli agenti Codex + Ruflo e STOP sviluppo")
+        self.agents_button.clicked.connect(self._show_agents)
+        controls.addWidget(self.agents_button)
         stage.addLayout(controls)
         voice_controls = QHBoxLayout()
         self.microphone_button = QPushButton("Microfono OFF")
@@ -177,6 +180,13 @@ class MainWindow(QMainWindow):
             self.input.clear()
             self.submitted.emit(text)
 
+    def _show_agents(self):
+        root = Path(__file__).resolve().parents[2]
+        success, _ = QProcess.startDetached(str(root / ".venv/Scripts/pythonw.exe"),
+                                          ["-B", str(root / "development/monitor.py")], str(root))
+        if not success:
+            self.action_label.setText("Impossibile aprire il pannello agenti. Usa Sviluppo_JARVIS.bat.")
+
     def set_busy(self, busy: bool) -> None:
         self.busy = busy
         if not busy:
@@ -190,7 +200,7 @@ class MainWindow(QMainWindow):
             self.input.setFocus()
 
     def set_state(self, state: str) -> None:
-        self.visualizer.set_state("executing" if state in {"thinking", "listening", "speaking", "confirmation"} else state)
+        self.visualizer.set_state(state)
         labels = {"thinking": "QWEN · GENERAZIONE", "listening": "TI ASCOLTO", "speaking": "RISPOSTA VOCALE",
                   "confirmation": "CONFERMA RICHIESTA"}
         self.state_label.setText(labels.get(state, self.visualizer.LABELS[self.visualizer.state]))
@@ -235,6 +245,8 @@ class MainWindow(QMainWindow):
 
     def closeEvent(self, event: QCloseEvent) -> None:
         if self.allow_close:
+            if hasattr(self.visualizer, "dispose"):
+                self.visualizer.dispose()
             event.accept()
         elif self.close_to_tray:
             event.ignore()

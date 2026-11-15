@@ -83,7 +83,6 @@ def main() -> int:
         log = LOG_PATH.open("a", encoding="utf-8", buffering=1)
         sys.stdout = sys.stderr = log
         print(time.strftime("\n[%Y-%m-%d %H:%M:%S] Avvio JARVIS"), flush=True)
-        ensure_ollama(settings.ollama, log)
         from jarvis.__main__ import main as start_jarvis
 
         return start_jarvis()

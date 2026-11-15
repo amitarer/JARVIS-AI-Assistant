@@ -9,9 +9,15 @@ mostra agenti realmente eseguiti, test, revisione, risorse e STOP sviluppo.
 Il primo ciclo isolato è collaudato; l'esecuzione continua resta disattivata.
 Vedi [configurazione e risultati](docs/development-system.md).
 
-Fare doppio clic su **`Avvia_JARVIS.bat`** nella cartella del progetto. Il launcher usa la `.venv`, avvia Ollama in background se non risponde e poi avvia JARVIS senza lasciare aperto il terminale. Funziona anche da un collegamento e con spazi nel percorso. Non scarica modelli; eventuali errori del launcher vengono mostrati in una finestra e registrati, quando possibile, in `data/logs/startup.log`. Ollama avviato dal launcher resta disponibile anche dopo l'uscita da JARVIS.
+Fare doppio clic su **`Avvia_JARVIS.bat`** nella cartella del progetto. Il launcher usa la `.venv`, apre JARVIS e verifica o avvia Ollama in background, senza lasciare aperto il terminale. Funziona anche da un collegamento e con spazi nel percorso. Non scarica modelli; eventuali errori del launcher vengono mostrati in una finestra e registrati, quando possibile, in `data/logs/startup.log`. Ollama avviato dal launcher resta disponibile anche dopo l'uscita da JARVIS.
 
 Per aprire subito la dashboard usare `Avvia_JARVIS.bat --dashboard`; per partire senza microfono usare `Avvia_JARVIS.bat --no-microphone`.
+
+La dashboard mostra ora il **nucleo ambra 3D**, con zoom e selezione dei nodi;
+la stessa scena appare nell'overlay durante ascolto e risposta vocale reali.
+Il pulsante **Agenti** apre la supervisione Codex + Ruflo. Un secondo avvio
+riporta in primo piano JARVIS già aperto, senza duplicare microfono e memoria.
+L'avvio di Ollama avviene fuori dal thread grafico: la finestra resta utilizzabile.
 
 In alternativa, dalla cartella del progetto con Ollama già disponibile:
 
@@ -19,7 +25,12 @@ In alternativa, dalla cartella del progetto con Ollama già disponibile:
 .\.venv\Scripts\pythonw.exe -m jarvis
 ```
 
-JARVIS parte in background, con il microfono attivo e un'icona vicino all'orologio. La finestra principale resta nascosta. Non servono privilegi amministrativi, Node.js o modifiche ai servizi Windows. Ollama deve essere disponibile su `http://127.0.0.1:11434` con `qwen3.5:9b` installato. JARVIS verifica la disponibilità; non scarica modelli e non sostituisce un errore con risposte AI simulate.
+JARVIS mostra la dashboard, con il microfono attivo e un'icona vicino all'orologio.
+Per avviarlo soltanto nel tray usare `Avvia_JARVIS.bat --background`.
+Non servono privilegi amministrativi, Node.js o modifiche ai servizi Windows
+per l'assistente. Ollama deve essere disponibile su `http://127.0.0.1:11434`
+con `qwen3.5:9b` installato. JARVIS verifica la disponibilità; non scarica modelli
+e non sostituisce un errore con risposte AI simulate.
 
 ## Chat e voce
 

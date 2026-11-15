@@ -13,7 +13,7 @@ from jarvis.core.models import Event
 from jarvis.ui.dialogs import ActivityDialog, ApprovalDialog, SettingsDialog
 from jarvis.ui.main_window import MainWindow
 from jarvis.ui.workers import TaskWorker
-from jarvis.ui.overlay import BrainOverlay
+from jarvis.ui.neural_runtime import create_overlay
 from jarvis.voice.session import VoiceSession, spoken_control
 from jarvis.voice.speech import SpeechOutput
 from jarvis.voice.replies import spoken_reply
@@ -35,7 +35,7 @@ class Presenter(QObject):
         self.had_error = False
         self.reduced_motion = controller.settings.reduced_motion
         self.log_level = controller.settings.log_level
-        self.overlay = BrainOverlay()
+        self.overlay = create_overlay()
         self.voice = VoiceSession(controller.settings.root, controller.settings.voice, self)
         self.speech = SpeechOutput(self)
         self.speech.voice_name = controller.settings.voice.voice_name
@@ -81,6 +81,8 @@ class Presenter(QObject):
         self.speech.started.connect(self._speech_started)
         self.speech.finished.connect(self._speech_finished)
         self.speech.level.connect(self.overlay.set_level)
+        if hasattr(window.visualizer, "set_level"):
+            self.speech.level.connect(window.visualizer.set_level)
         self.speech.error.connect(self._voice_error)
 
     def _submitted(self, text):
@@ -356,6 +358,8 @@ class Presenter(QObject):
     def _input_level(self, level):
         if self.voice.phase == "listening" and not self.speech.active:
             self.overlay.set_level(level)
+            if hasattr(self.window.visualizer, "set_level"):
+                self.window.visualizer.set_level(level)
 
     def _voice_command(self, text):
         if self.worker is None:

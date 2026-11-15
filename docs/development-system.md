@@ -11,6 +11,20 @@ Aprire **`Sviluppo_JARVIS.bat`** per il pannello con ruoli, PID effettivi,
 test, risorse, revisione, riepilogo e **STOP sviluppo**.
 Il primo collaudo è concluso: il pannello mostra il risultato e impedisce di
 riavviarlo accidentalmente. Non ci sono altri task autorizzati da eseguire.
+Il pannello si apre anche dal pulsante **Agenti** nella dashboard JARVIS.
+Gli agenti del collaudo sono terminati: i PID mostrati sono ricevute storiche,
+non processi attualmente al lavoro. Il solo avvio dell'assistente non avvia agenti.
+
+| Ruolo collaudato | Lavoro svolto nel ciclo |
+| --- | --- |
+| Coordinatore | Ha letto la richiesta e scelto i ruoli necessari dal catalogo |
+| Python | Ha corretto il file assegnato nel worktree isolato |
+| Testing | Ha eseguito i test e raccolto gli esiti reali |
+| Sicurezza | Ha revisionato la modifica indipendentemente dall'autore |
+
+Questi processi usano Codex con il login esistente; Ollama/Qwen resta il
+motore dell'assistente vocale. Il catalogo contiene 14 specialità predisposte,
+ma il collaudo ha effettivamente avviato soltanto i quattro ruoli indicati.
 
 ```powershell
 # Leggere lo stato senza avviare agenti
@@ -81,7 +95,9 @@ periodica automatica in questa implementazione a ciclo singolo.
 
 Non sono avviati Ollama ausiliario o inferenza GPU per questa prova.
 Le funzioni voce, SQLite e automazione di JARVIS restano nel progetto esistente.
-Non sono eseguiti merge, push, release o modifiche ai servizi Windows.
+Il runner non esegue merge, push, release o modifiche ai servizi Windows.
+L'integrazione del setup in `main` è eseguita separatamente da Codex in seguito
+alla richiesta dell'utente di applicare il lavoro completato.
 
 ## MCP e Codex
 
@@ -131,5 +147,7 @@ esplicitamente gli strumenti già approvati:
 
 Le prove senza inferenza si possono ripetere con `development/verify_ide_mcp.py`,
 `development/verify_mcp_contracts.py` e `development/verify_supervision.py`.
-Lo stato temporaneo è escluso da Git. Il setup è sul branch
-`codex/ruflo-setup`; il branch `main` conserva la baseline approvata.
+Lo stato temporaneo è escluso da Git. Il setup iniziale è conservato sul branch
+`codex/ruflo-setup`; il lavoro completato viene integrato anche in `main`
+su richiesta dell'utente. La correzione della fixture sintetica rimane nel suo
+repository di prova e non viene inserita nel codice dell'assistente.

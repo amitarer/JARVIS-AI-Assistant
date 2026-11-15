@@ -59,9 +59,10 @@ class NeuralView(QWebEngineView):
     ready = Signal()
     failed = Signal(str)
 
-    def __init__(self, graph: NeuralGraph, *, pixel_ratio=1.5, fps=60, parent=None):
+    def __init__(self, graph: NeuralGraph, *, pixel_ratio=1.5, fps=60, render_idle=False, parent=None):
         super().__init__(parent)
         self.graph, self.pixel_ratio, self.fps = graph, pixel_ratio, fps
+        self.render_idle = render_idle
         self.initialized = False
         self.disposed = False
         self.state = "thinking"
@@ -100,7 +101,7 @@ class NeuralView(QWebEngineView):
             self.failed.emit("Impossibile caricare gli asset locali del renderer.")
             return
         payload = json.dumps(self.graph.payload(), separators=(",", ":"), allow_nan=False)
-        options = json.dumps({"pixelRatio": self.pixel_ratio, "fps": self.fps})
+        options = json.dumps({"pixelRatio": self.pixel_ratio, "fps": self.fps, "renderIdle": self.render_idle})
         self.page().runJavaScript(f"window.neural && window.neural.initialize({payload},{options})", self._initialized)
 
     def _initialized(self, success):

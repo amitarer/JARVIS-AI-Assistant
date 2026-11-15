@@ -1,5 +1,22 @@
 # JARVIS: analisi del video e piano operativo
 
+**Aggiornamento dopo la richiesta di applicare il lavoro:** il nucleo ambra è
+ora integrato nella dashboard normale e nell'overlay vocale. `run.py` e
+`Avvia_JARVIS.bat` usano la nuova interfaccia: zoom e ispezione dei nodi sono
+nella dashboard; ascolto, voce e ampiezza PCM arrivano dal Presenter reale.
+Le 15 verifiche native sono in `data/verification/runtime-integration/verification.json`.
+La regressione aggiornata supera **172 test**. Nell'avvio reale sono stati
+verificati renderer WebGL attivo, microfono acceso, wake word pronta e
+secondo Start sulla stessa istanza in circa 0,4 secondi.
+È disponibile il pulsante **Agenti** per la supervisione Codex + Ruflo.
+L'avvio mostra la dashboard, inizializza Ollama fuori dal thread grafico e
+riporta in primo piano l'istanza già aperta. `--background` mantiene l'avvio nel tray.
+
+Le sezioni seguenti conservano l'analisi iniziale e i suoi risultati storici.
+Gmail applicativo, nuovi TTS e Playwright restano attività future: non sono
+funzioni abilitate dal collegamento della grafica. Stato agenti e limiti:
+[sistema di sviluppo](development-system.md).
+
 Verifica del 15 novembre 2026. Consegna iniziale: analisi, piano e anteprima
 funzionante. L’assistente operativo, la voce configurata, Ollama, SQLite e gli
 strumenti Windows non sono stati sostituiti. Il progetto effettivo resta
@@ -126,7 +143,8 @@ Gli stati manuali sono esplicitamente simulazioni grafiche. **Ascolta Cosimo ·
 PCM reale** riproduce invece un WAV locale attraverso il percorso audio esistente:
 l’ampiezza arriva dal misuratore PCM sincronizzato al player, senza microfono
 o richiesta AI. Fine campione, STOP e chiusura rilasciano la riproduzione.
-La scena non è ancora collegata agli eventi della normale sessione JARVIS.
+Questa finestra di prova resta separata; la medesima scena è ora anche
+collegata agli eventi reali nella dashboard e nell'overlay operativo.
 
 Avvio:
 
@@ -172,10 +190,10 @@ disponibile con `--neural-style cortex --neural-particles 2800`.
    durante ciascuna fase; poi account reale autorizzato. Provare lettura e bozza
    prima dell’invio. Separare test automatici da qualunque invio reale.
 
-Le azioni desktop, le credenziali OAuth, l’accesso alle email, l’installazione di
-Playwright/TTS e la sostituzione dell’overlay non vengono abilitate dal solo
-filmato o da un’anteprima riuscita. Il precedente piano Ruflo resta inattivo:
-questa richiesta non è stata interpretata come approvazione delle installazioni.
+Le azioni desktop, le credenziali OAuth, l’accesso alle email e l’installazione di
+Playwright/TTS non vengono abilitate dal solo filmato o da un’anteprima riuscita.
+L'overlay è stato successivamente integrato su richiesta dell'utente;
+Ruflo è stato installato e collaudato dopo l'approvazione dedicata.
 
 ## Risultati verificati e problemi aperti
 

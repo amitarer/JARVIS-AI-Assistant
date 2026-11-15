@@ -30,8 +30,11 @@ def main(*, dashboard: bool | None = None, microphone: bool | None = None) -> in
         from jarvis.ui.main_window import MainWindow
         from jarvis.ui.presenter import Presenter
         from jarvis.ui.background import BackgroundDesktop
+        from jarvis.ui.startup import InstanceChannel, LocalServiceStartup, request_existing
 
         ensure_local_data(load_settings(root))
+        if request_existing(root):
+            return 0
         instance_lock = QLockFile(str(root / "data/jarvis.lock"))
         if not instance_lock.tryLock(0):
             QMessageBox.information(None, "JARVIS", "JARVIS è già aperto oppure la cartella dati non è accessibile.")
@@ -41,9 +44,14 @@ def main(*, dashboard: bool | None = None, microphone: bool | None = None) -> in
         window = MainWindow()
         presenter = Presenter(window, controller)
         desktop = BackgroundDesktop(presenter)
+        channel = InstanceChannel(root, desktop)
+        startup = LocalServiceStartup(presenter)
         show_dashboard = not controller.settings.desktop.start_hidden if dashboard is None else dashboard
         listen = controller.settings.desktop.auto_listen if microphone is None else microphone
-        QTimer.singleShot(0, lambda: desktop.start(dashboard=show_dashboard, auto_listen=listen))
+        def start_desktop():
+            startup.start()
+            desktop.start(dashboard=show_dashboard, auto_listen=listen)
+        QTimer.singleShot(0, start_desktop)
         return app.exec()
     except Exception as exc:
         QMessageBox.critical(None, "JARVIS · Avvio non riuscito",

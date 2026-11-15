@@ -4,7 +4,7 @@
   "task_timeout_seconds": 20,
   "approval_timeout_seconds": 90,
   "desktop": {
-    "start_hidden": true,
+    "start_hidden": false,
     "auto_listen": true
   },
   "ollama": {

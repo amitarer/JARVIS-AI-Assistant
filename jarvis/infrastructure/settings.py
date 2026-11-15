@@ -30,7 +30,7 @@ class VoiceSettings:
 
 @dataclass(frozen=True)
 class DesktopSettings:
-    start_hidden: bool = True
+    start_hidden: bool = False
     auto_listen: bool = True
 
 
