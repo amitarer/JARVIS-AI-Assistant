@@ -18,6 +18,8 @@ la stessa scena appare nell'overlay durante ascolto e risposta vocale reali.
 Il pulsante **Agenti** apre la supervisione Codex + Ruflo. Un secondo avvio
 riporta in primo piano JARVIS già aperto, senza duplicare microfono e memoria.
 L'avvio di Ollama avviene fuori dal thread grafico: la finestra resta utilizzabile.
+Qwen e il riconoscimento vocale vengono preparati in anticipo; le domande brevi
+usano una sola inferenza. Vedi [misure e verifiche di reattività](docs/latency-optimization.md).
 
 In alternativa, dalla cartella del progetto con Ollama già disponibile:
 

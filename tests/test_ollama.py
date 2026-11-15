@@ -19,6 +19,18 @@ from tests.support import make_controller, temporary_project
 
 
 class ResponseSeparationTests(unittest.TestCase):
+    def test_preload_does_not_generate_a_reply_or_download_a_model(self):
+        provider = OllamaProvider(OllamaSettings(enabled=True))
+        with patch.object(provider, "_json", return_value={"done": True}) as request:
+            provider.preload(TaskContext("warmup", threading.Event(), 5))
+        method, path, body, _ = request.call_args.args
+        self.assertEqual((method, path), ("POST", "/api/generate"))
+        self.assertNotIn("prompt", body)
+        self.assertNotIn("messages", body)
+        self.assertNotIn("tools", body)
+        self.assertEqual(body["model"], "qwen3.5:9b")
+        self.assertEqual(body["keep_alive"], "30m")
+
     def test_reasoning_tags_split_at_every_character_are_removed(self):
         value = "<think>PRIVATE<analysis>ALSO PRIVATE</analysis></think>Risposta finale."
         parser = FinalTextFilter()

@@ -86,6 +86,7 @@ class VoiceSession(QObject):
         self.starting = False
         self.enabled = True
         self.phase = "wake"
+        self._prepare_transcriber()
         self.enabled_changed.emit(True)
         self.status.emit("Microfono ON · in attesa di «Jarvis»")
         self.timer.start()
@@ -168,13 +169,16 @@ class VoiceSession(QObject):
         if not self.control_only:
             self.state.emit("thinking")
             self.status.emit("Microfono ON · trascrizione locale")
+        self._prepare_transcriber()
+        self.transcriber.submit(np.concatenate(self.parts), self.generation, control_only=self.control_only)
+        self.parts = []
+
+    def _prepare_transcriber(self):
         if self.transcriber is None:
             self.transcriber = TranscriptionWorker(self.root, self)
             self.transcriber.text.connect(self._text)
             self.transcriber.error.connect(self._transcription_error)
             self.transcriber.start()
-        self.transcriber.submit(np.concatenate(self.parts), self.generation, control_only=self.control_only)
-        self.parts = []
 
     def _text(self, text, generation):
         if generation != self.generation or not self.enabled:

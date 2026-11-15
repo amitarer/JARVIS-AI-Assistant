@@ -72,6 +72,14 @@ def run_agent(controller, context, emit, approve, before_tool) -> str:
     if any(schema["name"] in SYSTEM_OPERATIONS for schema in initial_schemas):
         # Explicit app launches and fresh observations reach the same validated registry.
         calls = provider.select_initial_tools(messages, initial_schemas, context)
+        emit(Event("usage", provider.selection_usage))
+        if provider.initial_answer is not None:
+            answer, blocked = guard_unverified_answer(provider.initial_answer)
+            if blocked:
+                emit(Event("verification", {"unsupported_completion_blocked": True}))
+            emit(Event("stream_start"))
+            emit(Event("stream", answer))
+            return answer
         if calls:
             summaries = []
             for call in calls:

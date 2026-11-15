@@ -91,6 +91,11 @@ class LocalServiceStartup(QObject):
                 path.parent.mkdir(parents=True, exist_ok=True)
                 with path.open("a", encoding="utf-8") as output:
                     ensure_ollama(settings.ollama, output)
+                if settings.ollama.enabled:
+                    from jarvis.brain.ollama import OllamaProvider
+                    from jarvis.core.tasks import TaskContext
+                    OllamaProvider(settings.ollama).preload(
+                        TaskContext("startup-warmup", threading.Event(), 60))
                 self.results.put((True, ""))
             except Exception as exc:
                 self.results.put((False, str(exc)[:500]))

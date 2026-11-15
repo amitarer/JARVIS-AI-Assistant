@@ -2,6 +2,8 @@
 
 import queue
 import threading
+import logging
+import time
 from pathlib import Path
 
 import numpy as np
@@ -32,6 +34,21 @@ class TranscriptionWorker(QThread):
         self.jobs = queue.Queue(maxsize=1)
         self.stopping = threading.Event()
         self.cancelled = threading.Event()
+        self.model_ready = False
+        self.load_seconds = None
+        self.last_decode_seconds = None
+
+    def _load_model(self):
+        folder = self.root / "data/models/whisper-small"
+        if not (folder / "model.bin").is_file():
+            raise FileNotFoundError
+        started = time.monotonic()
+        from faster_whisper import WhisperModel
+        model = WhisperModel(str(folder), device="cpu", compute_type="int8", cpu_threads=4,
+                             num_workers=1, local_files_only=True)
+        self.load_seconds = round(time.monotonic() - started, 4)
+        self.model_ready = True
+        return model
 
     def submit(self, samples, generation: int, *, control_only=False):
         self.cancelled.clear()
@@ -53,26 +70,28 @@ class TranscriptionWorker(QThread):
         self.cancel()
 
     def run(self):
-        model = None
+        # Load on the existing worker thread as soon as the microphone is ready,
+        # rather than charging this initialization to the first spoken command.
+        try:
+            model = self._load_model()
+        except Exception as exc:
+            model = None
+            logging.getLogger("jarvis").info("stt_warmup_unavailable", extra={"error_type": type(exc).__name__})
         while not self.stopping.is_set():
             try:
                 samples, generation, control_only = self.jobs.get(timeout=0.1)
             except queue.Empty:
                 continue
             try:
-                folder = self.root / "data/models/whisper-small"
-                if not (folder / "model.bin").is_file():
-                    raise FileNotFoundError
                 if model is None:
-                    from faster_whisper import WhisperModel
-                    model = WhisperModel(str(folder), device="cpu", compute_type="int8", cpu_threads=4,
-                                         num_workers=1, local_files_only=True)
+                    model = self._load_model()
                 if self.cancelled.is_set() or self.stopping.is_set():
                     continue
                 options = transcription_options(self.root)
                 if control_only:
                     options.update(beam_size=1, initial_prompt="Stop. Fermati. Basta.", hotwords="stop, fermati, basta",
                                    vad_parameters={"min_silence_duration_ms": 200})
+                started = time.monotonic()
                 segments, _ = model.transcribe(samples.astype(np.float32) / 32768, **options)
                 parts = []
                 for segment in segments:
@@ -81,6 +100,7 @@ class TranscriptionWorker(QThread):
                     if segment.no_speech_prob < 0.6:
                         parts.append(segment.text)
                 if not self.cancelled.is_set() and not self.stopping.is_set():
+                    self.last_decode_seconds = round(time.monotonic() - started, 4)
                     self.text.emit(" ".join(parts).strip(), generation)
             except FileNotFoundError:
                 self.error.emit("Modello STT assente. Esegui scripts/setup_voice_models.py prima della conversazione vocale.", generation)

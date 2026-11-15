@@ -31,7 +31,7 @@ class StartupTests(unittest.TestCase):
 
     def presenter(self, root):
         presenter = QObject()
-        presenter.controller = SimpleNamespace(settings=SimpleNamespace(root=root, ollama=SimpleNamespace(model="test")))
+        presenter.controller = SimpleNamespace(settings=SimpleNamespace(root=root, ollama=SimpleNamespace(model="test", enabled=False)))
         presenter.window = SimpleNamespace(action_label=QLabel(), set_provider=lambda *args: presenter.providers.append(args))
         presenter.worker = None
         presenter.closing = False
