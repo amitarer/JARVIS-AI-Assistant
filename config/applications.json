@@ -1,0 +1,11 @@
+{
+  "blocco_note": {
+    "label": "Blocco note",
+    "executable": "C:\\Windows\\System32\\notepad.exe"
+  },
+  "chrome": {
+    "label": "Google Chrome",
+    "executable": "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+    "aliases": ["crom", "crome", "microm", "micron"]
+  }
+}

@@ -1,0 +1,31 @@
+QWidget { background: #080f18; color: #dce8ef; font-family: "Segoe UI"; font-size: 13px; }
+QMainWindow { background: #080f18; }
+QLabel#brand { color: #e4f9ff; font-size: 25px; font-weight: 300; }
+QLabel#eyebrow { color: #7196a9; font-family: "Consolas"; font-size: 10px; }
+QLabel#demoBadge { color: #e7b782; font-family: "Consolas"; font-size: 10px; padding: 9px 12px; border: 1px solid #473b30; border-radius: 4px; }
+QLabel#stateLabel { color: #64d6ec; font-family: "Consolas"; font-size: 13px; }
+QLabel#muted { color: #7793a5; font-size: 11px; }
+QLabel#actionText { color: #b1c6d3; font-size: 12px; border-top: 1px solid #1a2b3a; padding-top: 12px; }
+QLabel#warning { color: #ffb69e; font-family: "Consolas"; padding: 10px 0; }
+QTextBrowser { background: #0b1521; border: none; border-left: 1px solid #1c3546; padding: 12px 20px; selection-background-color: #225269; font-size: 14px; }
+QTextEdit { background: #0b1521; border: 1px solid #1b3446; padding: 10px; selection-background-color: #225269; }
+QLineEdit { background: #0b1926; border: 1px solid #234254; border-radius: 4px; padding: 13px 12px; selection-background-color: #225269; }
+QLineEdit:focus { border-color: #55c8df; }
+QPushButton { background: transparent; color: #a9c8d7; border: 1px solid #284252; border-radius: 4px; padding: 10px 16px; }
+QPushButton:hover { background: #102735; border-color: #52b7cc; color: #e0f8ff; }
+QPushButton:pressed { background: #16394a; }
+QPushButton:disabled { color: #546874; border-color: #1b2b35; background: transparent; }
+QPushButton:focus { border-color: #a6eaff; }
+QPushButton#primaryButton { background: #153c4c; border: 1px solid #377d8b; color: #bdf7ff; padding: 13px 18px; }
+QPushButton#primaryButton:hover { background: #1c5062; }
+QPushButton#quietButton { border: none; color: #91a6b5; padding: 6px 2px; font-size: 11px; }
+QPushButton#stopButton { color: #ffb7a0; border-color: #764639; padding: 10px 26px; font-family: "Consolas"; font-weight: bold; }
+QPushButton#stopButton:disabled { color: #77635c; border-color: #362c2a; }
+QPushButton#stopButton:hover { background: #3e2525; }
+QDialog { background: #0b1420; }
+QComboBox { background: #102130; padding: 7px; border: 1px solid #284252; }
+QCheckBox { padding: 8px 0; }
+QScrollBar:vertical { background: #0a1420; width: 7px; margin: 0; }
+QScrollBar::handle:vertical { background: #294858; min-height: 35px; border-radius: 3px; }
+QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical { height: 0; }
+QToolTip { color: #dce8ef; background: #102735; border: 1px solid #284252; padding: 5px; }

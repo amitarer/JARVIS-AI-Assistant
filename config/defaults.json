@@ -1,0 +1,27 @@
+{
+  "log_level": "INFO",
+  "reduced_motion": false,
+  "task_timeout_seconds": 20,
+  "approval_timeout_seconds": 90,
+  "desktop": {
+    "start_hidden": true,
+    "auto_listen": true
+  },
+  "ollama": {
+    "enabled": true,
+    "url": "http://127.0.0.1:11434",
+    "model": "qwen3.5:9b",
+    "timeout_seconds": 180,
+    "max_tool_rounds": 10
+  },
+  "voice": {
+    "sensitivity": 0.55,
+    "conversation_seconds": 30,
+    "silence_seconds": 1.2,
+    "max_utterance_seconds": 25,
+    "microphone_id": "",
+    "voice_name": "Microsoft Cosimo",
+    "model_path": "assets/wakeword/Jarvis_20260313_215039.onnx",
+    "continuous_conversation": true
+  }
+}

@@ -1,0 +1,132 @@
+{
+  "schema_version": 1,
+  "document_type": "proposed_runner_contract_not_native_ruflo_config",
+  "status": "awaiting_approval",
+  "enabled": false,
+  "continuous_enabled": false,
+  "start_at_windows_login": false,
+  "project_root": "C:/Users/VGgot/Desktop/JARVIS",
+  "tooling_root": "C:/Users/VGgot/Desktop/JARVIS/.devtools",
+  "runtime_state_root": "C:/Users/VGgot/Desktop/JARVIS/.development-state",
+  "ruflo": {
+    "package": "ruflo",
+    "version": "3.77.1",
+    "transport": "stdio",
+    "automatic_updates": false,
+    "native_autopilot_enabled": false,
+    "role": "coordination_and_metadata_not_code_execution",
+    "require_initialize_and_list_tools_probe": true,
+    "startup_timeout_seconds": 120,
+    "tool_timeout_seconds": 60
+  },
+  "executors": {
+    "primary": "codex_exec",
+    "codex_auth": "existing_login_no_credential_export",
+    "codex_session_persistence": "ephemeral",
+    "worker_user_config_inheritance": false,
+    "worker_connected_apps_inheritance": false,
+    "worker_native_subagents": false,
+    "ollama_auxiliary": {
+      "enabled_after_probe": false,
+      "base_url": "http://127.0.0.1:11434",
+      "model": "qwen3.5:9b",
+      "max_concurrent_requests": 1,
+      "timeout_seconds": 90,
+      "max_output_tokens": 1024,
+      "cloud_fallback": false,
+      "environment": {
+        "RUFLO_PROVIDER": "ollama",
+        "OLLAMA_BASE_URL": "http://127.0.0.1:11434",
+        "OLLAMA_DEFAULT_MODEL": "qwen3.5:9b"
+      }
+    }
+  },
+  "pipeline": ["ANALYZE", "PLAN", "DEVELOP", "TEST", "REVIEW", "IMPROVE"],
+  "routing": {
+    "catalog": "agents.proposed.json",
+    "strategy": "coordinator_selects_roles_from_task_scope_and_evidence",
+    "always_include": ["coordinator", "testing"],
+    "max_active_agents_including_coordinator": 4,
+    "max_active_workers": 3,
+    "max_concurrent_code_writers_per_cycle": 1,
+    "require_task_path_ownership": true,
+    "reassign_slots_between_phases": true,
+    "reviewer_must_differ_from_implementer": true
+  },
+  "backlog": {
+    "file": "backlog.proposed.json",
+    "requires_explicit_task_authorization": true,
+    "allow_generated_tasks_to_execute": false,
+    "empty_authorized_backlog_action": "stop_cleanly"
+  },
+  "isolation": {
+    "execution_workspace": "one_git_worktree_per_task_branch",
+    "main_branch_writes": false,
+    "merge_automatically": false,
+    "push": false,
+    "release": false,
+    "worker_sandbox_required": true,
+    "abort_if_sandbox_unverified": true,
+    "credential_read_probe": "synthetic_canary_only_never_real_credentials",
+    "worker_protected_paths": [".env", ".venv", "data", ".git", ".devtools", ".development-state"],
+    "out_of_scope_mutation_action": "reject_result_and_require_review",
+    "test_execution": "audited_commands_external_to_model",
+    "initial_test_network_access": false,
+    "initial_test_live_windows_automation": false,
+    "production_sqlite_access": false,
+    "sensitive_component_changes_require_task_scope": ["jarvis/security", "jarvis/memory", "jarvis/tools", "jarvis/browser"]
+  },
+  "limits": {
+    "first_run_cycles": 1,
+    "max_cycle_seconds": 1200,
+    "max_agent_seconds": 300,
+    "max_test_seconds": 180,
+    "max_repair_passes": 2,
+    "max_codex_invocations_per_cycle": 8,
+    "max_auxiliary_ollama_requests_per_cycle": 4,
+    "codex_inner_model_call_hard_limit_available": false,
+    "token_accounting": "record_reported_usage_and_stop_further_invocations_at_budget",
+    "reported_tokens_soft_ceiling_per_cycle": 100000,
+    "process_tree_memory_limit_mib": 8192,
+    "process_tree_cpu_rate_percent": 25,
+    "resource_enforcement": "windows_job_object_required_before_live_execution",
+    "minimum_available_system_memory_mib": 8192,
+    "gpu_vram_hard_limit_supported": false,
+    "log_retention_days": 14,
+    "log_total_limit_mib": 256,
+    "continuous_poll_seconds_if_later_approved": 300,
+    "continuous_session_max_seconds_if_later_approved": 7200,
+    "continuous_session_max_cycles_if_later_approved": 6
+  },
+  "stop": {
+    "mechanisms": ["dedicated_stop_button", "stop_script", "runner_console_ctrl_c"],
+    "flag_file": ".development-state/STOP",
+    "poll_milliseconds": 250,
+    "grace_seconds": 3,
+    "terminate_only_own_job_object": true,
+    "kill_processes_by_name": false,
+    "persist_cancellation": true,
+    "auto_resume_after_restart": false,
+    "jarvis_assistant_stop_button_integration": "future_separate_change_not_implemented"
+  },
+  "deliverables_per_cycle": [
+    "authorized_task_and_acceptance_criteria",
+    "selected_roles_and_real_executor_process_ids",
+    "branch_base_commit_and_changed_paths",
+    "test_commands_exit_codes_and_logs",
+    "independent_review_findings",
+    "fix_attempts_and_remaining_issues",
+    "resource_samples_and_reported_token_usage",
+    "patch_and_integration_proposal_without_merge"
+  ],
+  "activation_gates": [
+    "explicit_user_approval_for_local_installation_and_git_baseline",
+    "portable_node_and_git_verified",
+    "ruflo_version_and_package_integrity_verified",
+    "mcp_initialize_and_list_tools_verified",
+    "codex_sandbox_and_canary_read_denial_verified",
+    "job_object_limits_verified",
+    "stop_cancels_only_owned_process_tree_verified",
+    "one_small_authorized_cycle_verified"
+  ]
+}

@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "priority_order": [
+    "stability_security",
+    "ollama_qwen",
+    "conversation_quality",
+    "natural_male_voice",
+    "jarvis_wake_word",
+    "neural_3d_overlay",
+    "windows_control",
+    "browser_automation",
+    "operation_memory",
+    "performance"
+  ],
+  "tasks": [
+    {
+      "id": "DEV-SMOKE-001",
+      "authorized": false,
+      "status": "proposed",
+      "category": "stability_security",
+      "title": "Collaudare il ciclo su una piccola fixture isolata con test inizialmente fallente",
+      "scope": "An ephemeral Git fixture containing only a documented normalization function and its unit test, outside JARVIS production code.",
+      "fixture_requirement": "Normalize an integer percentage to 0..100; reject bool and non-integers with ValueError.",
+      "initial_fixture_defect": "The intentionally defective fixture initially accepts bool because bool subclasses int.",
+      "candidate_roles": ["coordinator", "python", "testing", "security"],
+      "allowed_paths": ["fixture/normalize.py", "fixture/test_normalize.py", "fixture/README.md"],
+      "acceptance_criteria": [
+        "Label the fixture and its defect as synthetic; do not report a JARVIS bug.",
+        "Record a real failing baseline test.",
+        "Select roles automatically and start at most four agents including coordinator.",
+        "Implement the small correction on an isolated task branch.",
+        "Record a passing test exit code and independent review.",
+        "Exercise STOP on an owned sleeping fixture child without stopping other processes.",
+        "Produce the patch and cycle report without merging into JARVIS."
+      ]
+    }
+  ],
+  "new_findings": "Proposals only until reproducible evidence and task authorization exist."
+}

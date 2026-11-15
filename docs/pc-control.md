@@ -1,0 +1,17 @@
+# Controllo Windows 0.4
+
+Questo documento descrive il controllo PC introdotto nella 0.4.0. Dalla 0.4.1, per rispettare il requisito di strumenti strutturati, `run_powershell` non è più registrato nell'app né offerto al modello. Gli adapter Windows continuano a usare script predefiniti. Il File Manager strutturato è una fase successiva, soggetta ad approvazione. Vedere [Fase 1 — System Information](system-information.md).
+
+L'apertura delle applicazioni non dipende più da un elenco fisso. `ApplicationCatalog` legge `Get-StartApps`, assegna ID stabili e risolve nomi esatti o corrispondenze univoche. Le voci esplicite in `config/applications.json` hanno priorità e vengono rilette senza riavvio. Un nome ambiguo non sceglie automaticamente un programma. Sono accettati anche percorsi assoluti a eseguibili `.exe`, senza argomenti. Le app Store e le voci del menu Start vengono avviate attraverso `shell:AppsFolder`.
+
+`open_resource` apre documenti, cartelle, siti e pannelli impostazioni. `inspect_files` legge cartelle e anteprime UTF-8, con limiti di dimensione. La classe legacy `RunPowerShellTool` resta nel repository per test di regressione isolati, ma non è accessibile all'agente. Non è il File Manager strutturato previsto dalle fasi successive.
+
+`inspect_desktop` usa UI Automation e restituisce gli ID reali delle finestre, nomi e tipi di controlli, valori accessibili non protetti e coordinate. `desktop_action` esegue operazioni sui controlli osservati. Nella configurazione dell'app, la sessione desktop lega le azioni alle finestre osservate nella stessa attività e le coordinate ai controlli effettivamente rilevati. Prima dell'input ricontrolla il processo proprietario della finestra; le finestre di JARVIS sono escluse. Input, clic e chiusura richiedono la conferma dell'interfaccia; focus e cambi di stato della finestra no.
+
+Il bridge PowerShell riceve parametri JSON attraverso l'ambiente, senza interpolarli nel codice. Clic e testo usano `SendInput`; il focus viene verificato e il testo si interrompe se cambia finestra. I tasti premuti e rilasciati vengono inviati insieme. Il worker controlla cancellazione, deadline e dimensione dell'output mentre PowerShell lavora. Al superamento del limite o a STOP termina il processo PowerShell; eventuali processi esterni già avviati possono proseguire.
+
+I risultati di lettura sono osservazioni: il modello può riassumerli senza presentarli come azioni eseguite. Gli esiti di azioni restano derivati dallo strumento. Pagine, controlli, file e output dei comandi sono dati non fidati, non istruzioni o autorizzazioni. La distinzione fra input consegnato a Windows e risultato dell'azione resta esplicita.
+
+Il controllo grafico dipende dai controlli esposti dall'app. Questo aggiornamento non include visione dello schermo, riconoscimento di interfacce disegnate su canvas o accesso automatico ad account. UAC e permessi di altri processi restano quelli di Windows. La procedura iniziale della Foundation descritta negli altri documenti è storica; il catalogo e gli strumenti sopra sono quelli della versione 0.4.
+
+Verifica: `python -B -m unittest discover -s tests -v` dalla `.venv`; `scripts/verify_pc_control.py` esercita gli strumenti sul desktop nativo attraverso il registro e conferme limitate alla propria finestra di prova. Il report è `data/verification/pc-control.json`. `data/verification/pc-agent.json` riporta la prova con Qwen reale e apertura di Chrome.

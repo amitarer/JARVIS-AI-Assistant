@@ -1,0 +1,10 @@
+# Runtime dependencies; Qt's transitive packages use the same release.
+PySide6==6.12.0
+PySide6_Addons==6.12.0
+PySide6_Essentials==6.12.0
+PySide6_Pdf==6.12.0.140
+PySide6_WebEngine==6.12.0.140
+shiboken6==6.12.0
+python-dotenv==1.2.4
+openwakeword==0.6.0
+faster-whisper==1.2.1

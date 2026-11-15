@@ -1,0 +1,13 @@
+# INACTIVE PROPOSAL. Not read by Codex at this path.
+# Resolve these portable paths and validate the live tool catalog after approval.
+# Do not run init --full or copy upstream AGENTS/hooks over JARVIS instructions.
+[mcp_servers.ruflo]
+command = 'C:\Users\VGgot\Desktop\JARVIS\.devtools\node\node.exe'
+args = ['C:\Users\VGgot\Desktop\JARVIS\.devtools\ruflo\node_modules\ruflo\bin\ruflo.js', 'mcp', 'start']
+cwd = 'C:\Users\VGgot\Desktop\JARVIS\.development-state\coordination'
+enabled = false
+required = true
+startup_timeout_sec = 120
+tool_timeout_sec = 60
+# Initial IDE surface is read-only. The runner owns mutation and execution.
+enabled_tools = ['swarm_status', 'swarm_health', 'agent_list', 'agent_status', 'autopilot_status', 'autopilot_progress']

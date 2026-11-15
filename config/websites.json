@@ -1,0 +1,17 @@
+{
+  "chatgpt": {
+    "label": "ChatGPT",
+    "url": "https://chatgpt.com/",
+    "aliases": ["chat gpt", "chat gbt", "chatgbt", "chatgbt.com", "ciatgpt", "ciatgpt.com", "chatgpt punto com", "chat gpt punto com"]
+  },
+  "google": {
+    "label": "Google",
+    "url": "https://www.google.com/",
+    "aliases": ["google.it", "google punto com"]
+  },
+  "youtube": {
+    "label": "YouTube",
+    "url": "https://www.youtube.com/",
+    "aliases": ["you tube", "youtube punto com"]
+  }
+}
