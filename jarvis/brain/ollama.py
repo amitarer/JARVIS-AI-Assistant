@@ -79,14 +79,35 @@ class OllamaProvider:
             raise UserError("Risposta Ollama non valida.") from None
 
     def check(self, context: TaskContext) -> dict:
-        models = self._json("GET", "/api/tags", None, context).get("models", [])
-        names = {model.get("name", model.get("model")) for model in models if isinstance(model, dict)}
-        if self.settings.model not in names:
+        from jarvis.brain.ollama_inventory import installed_names, native_context_length, same_model
+        try:
+            names = installed_names(self._json("GET", "/api/tags", None, context))
+        except ValueError:
+            raise UserError("Inventario locale Ollama non valido.") from None
+        if not any(same_model(self.settings.model, name) for name in names):
             raise UserError(f"Modello {self.settings.model} non installato in Ollama. Nessuna risposta AI simulata.")
         info = self._json("POST", "/api/show", {"model": self.settings.model}, context)
-        return {"model": self.settings.model, "capabilities": info.get("capabilities", []),
+        capabilities = info.get("capabilities", [])
+        if not isinstance(capabilities, list) or any(not isinstance(item, str) for item in capabilities):
+            capabilities = []
+        return {"model": self.settings.model, "capabilities": capabilities,
+                "installed_models": names, "native_context_length": native_context_length(info.get("model_info")),
                 "thinking_controls": info.get("thinking", {}), "endpoint": self.settings.url,
                 "thinking_disabled_requested": True}
+
+    def inventory(self, context: TaskContext) -> dict:
+        """Fresh read-only inspection; ordinary turns keep the existing check path."""
+        from jarvis.brain.ollama_inventory import inventory_summary
+        from jarvis.core.models import TaskTimeout
+        result = self.check(context)
+        detail_context = TaskContext(context.task_id, context.cancellation, min(3, context.remaining))
+        try:
+            runtime = self._json("GET", "/api/ps", None, detail_context)
+            summary = inventory_summary(result, runtime)
+        except (UserError, ValueError, TaskTimeout) as exc:
+            context.checkpoint()
+            summary = inventory_summary(result, runtime_error=str(exc))
+        return {**result, "local_inventory": summary}
 
     def select_initial_tools(self, messages, schemas, context):
         """Select measured information or one application launch, never free-form code."""

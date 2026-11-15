@@ -18,3 +18,6 @@ include = ["jarvis*"]
 "jarvis.tools" = ["*.ps1"]
 "jarvis.infrastructure" = ["*.ps1"]
 "jarvis.browser" = ["*.ps1", "*.js"]
+
+[tool.setuptools.data-files]
+"share/jarvis/third_party/PersonalJarvis" = ["third_party/PersonalJarvis/LICENSE", "third_party/PersonalJarvis/NOTICE", "third_party/PersonalJarvis/README.md"]

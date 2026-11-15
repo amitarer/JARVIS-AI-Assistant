@@ -37,7 +37,7 @@ class Controller:
                 return
             if kind == "provider_check":
                 from jarvis.brain.ollama import OllamaProvider
-                result = OllamaProvider(self.settings.ollama).check(context)
+                result = OllamaProvider(self.settings.ollama).inventory(context)
                 emit(Event("provider", {"available": True, **result}))
                 return
             if kind == "voice" and not self.settings.ollama.enabled:

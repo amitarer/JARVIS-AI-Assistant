@@ -4,6 +4,11 @@ JARVIS usa **Qwen 3.5 9B tramite Ollama**, chat e memoria SQLite, strumenti Wind
 
 ## Avvio
 
+Il pulsante **Modello** mostra lo stato locale Ollama verificato, con contesto
+nativo e runtime distinti, capacità e memoria del modello. Il primo modulo
+di fusione e i suoi limiti sono descritti in [FUSION_PLAN.md](FUSION_PLAN.md)
+e nel [report di verifica](docs/fusion-module-1.md).
+
 Per il sistema **Codex + Ruflo**, aprire `Sviluppo_JARVIS.bat`:
 mostra agenti realmente eseguiti, test, revisione, risorse e STOP sviluppo.
 Il primo ciclo isolato è collaudato; l'esecuzione continua resta disattivata.

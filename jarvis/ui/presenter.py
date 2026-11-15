@@ -36,6 +36,7 @@ class Presenter(QObject):
         self.reduced_motion = controller.settings.reduced_motion
         self.log_level = controller.settings.log_level
         self.overlay = create_overlay()
+        self.model_status_dialog = None
         self.voice = VoiceSession(controller.settings.root, controller.settings.voice, self)
         self.speech = SpeechOutput(self)
         self.speech.voice_name = controller.settings.voice.voice_name
@@ -69,6 +70,7 @@ class Presenter(QObject):
         window.microphone_requested.connect(self.toggle_microphone)
         window.listen_requested.connect(self.listen)
         window.overlay_requested.connect(lambda: self.overlay.present("listening", "Anteprima del cervello digitale", preview=True, timeout_ms=5000))
+        window.model_status_requested.connect(self.show_model_status)
         self.voice.command.connect(self._voice_command)
         self.voice.state.connect(self._voice_state)
         self.voice.level.connect(self._input_level)
@@ -111,6 +113,8 @@ class Presenter(QObject):
         self.response_received = False
         self.last_notice = ""
         self.window.set_busy(True)
+        if self.model_status_dialog:
+            self.model_status_dialog.refresh_button.setEnabled(False)
         self.window.set_state("executing")
         self.worker = TaskWorker(self.controller, payload, self)
         self.worker.event.connect(self.on_event)
@@ -149,6 +153,8 @@ class Presenter(QObject):
         elif event.kind == "provider":
             self.provider_info = event.data
             self.window.set_provider(self.controller.settings.ollama.model, event.data["available"])
+            if self.model_status_dialog:
+                self.model_status_dialog.set_status(event.data)
         elif event.kind == "stream_start":
             self.stream_buffer = ""
             self.window.set_stream("")
@@ -246,6 +252,8 @@ class Presenter(QObject):
         if worker is not None:
             worker.deleteLater()
         self.window.set_busy(False)
+        if self.model_status_dialog:
+            self.model_status_dialog.refresh_button.setEnabled(True)
         if self.speech.active:
             self.window.stop_button.setEnabled(True)
         self.stream_timer.stop()
@@ -307,6 +315,26 @@ class Presenter(QObject):
             self.window.close()
         elif self.closing:
             self.shutdown_timer.start()
+
+    @Slot()
+    def show_model_status(self):
+        if self.closing:
+            return
+        if self.model_status_dialog is None:
+            from jarvis.ui.model_status import ModelStatusDialog
+            self.model_status_dialog = ModelStatusDialog(self.window)
+            self.model_status_dialog.refresh_requested.connect(self.refresh_model_status)
+        if self.provider_info:
+            self.model_status_dialog.set_status(self.provider_info)
+        self.model_status_dialog.show()
+        self.model_status_dialog.raise_()
+        self.model_status_dialog.refresh_button.setEnabled(self.worker is None)
+        self.refresh_model_status()
+
+    @Slot()
+    def refresh_model_status(self):
+        if self.worker is None and not self.closing:
+            self.start({"kind": "provider_check"})
 
     @Slot()
     def settings(self) -> None:

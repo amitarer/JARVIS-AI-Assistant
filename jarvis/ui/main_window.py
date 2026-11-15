@@ -28,6 +28,7 @@ class MainWindow(QMainWindow):
     microphone_requested = Signal()
     listen_requested = Signal()
     overlay_requested = Signal()
+    model_status_requested = Signal()
 
     def __init__(self):
         super().__init__()
@@ -93,6 +94,10 @@ class MainWindow(QMainWindow):
         self.agents_button.setToolTip("Stato reale degli agenti Codex + Ruflo e STOP sviluppo")
         self.agents_button.clicked.connect(self._show_agents)
         controls.addWidget(self.agents_button)
+        self.model_button = QPushButton("Modello")
+        self.model_button.setToolTip("Stato locale Ollama, capacità e memoria dichiarate")
+        self.model_button.clicked.connect(self.model_status_requested)
+        controls.addWidget(self.model_button)
         stage.addLayout(controls)
         voice_controls = QHBoxLayout()
         self.microphone_button = QPushButton("Microfono OFF")
