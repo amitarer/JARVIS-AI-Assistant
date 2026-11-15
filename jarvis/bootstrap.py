@@ -26,6 +26,7 @@ from jarvis.tools.research import RunResearchTool, ResearchOperationTool
 from jarvis.tools.web_reading import WebReadingTool
 from jarvis.tools.whatsapp import WhatsAppMessageTool, WhatsAppContactTool, ConnectWhatsAppTool
 from jarvis.browser.whatsapp import WhatsAppBrowser
+from jarvis.tools.calculate import CalculateTool
 
 
 def build_controller(root: Path) -> Controller:
@@ -40,6 +41,7 @@ def build_controller(root: Path) -> Controller:
 
 def build_tool_registry(settings: Settings, repository: Repository) -> ToolRegistry:
     registry = ToolRegistry(SecurityPolicy(ApprovalStore()))
+    registry.register(CalculateTool())
     system_information = SystemInformation()
     for operation in OPERATIONS:
         registry.register(SystemInformationTool(system_information, operation))

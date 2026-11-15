@@ -7,7 +7,7 @@ from jarvis.core.models import UserError
 
 READ_ONLY_TOOLS=frozenset({"get_current_datetime","get_system_information","get_hardware_information",
     "get_memory_information","get_disk_information","get_battery_status","get_process_information",
-    "get_open_applications","list_applications","inspect_files","inspect_desktop","read_operations", "search_web", "read_web_page"})
+    "get_open_applications","list_applications","inspect_files","inspect_desktop","read_operations", "search_web", "read_web_page", "calculate"})
 
 
 class WorkingMemory:
@@ -51,16 +51,25 @@ class WorkingMemory:
 
 
 def compact_observations(messages):
-    """Keep recent evidence, with explicit excerpts for stale tool outputs."""
+    """Keep fresh evidence and both ends of stale outputs, within a shared budget."""
     indices=[index for index,m in enumerate(messages) if m["role"]=="tool"]
-    recent=set(indices[-2:])
-    latest=indices[-1] if indices else None
+    replacements={}
+    remaining=23000
+    for rank,index in enumerate(reversed(indices)):
+        content=messages[index].get("content", "")
+        limit=min(remaining, 16000 if rank==0 else 6000 if rank==1 else 1000)
+        if len(content)>limit:
+            keep=max(0,limit-220)
+            head=keep*2//3
+            tail=keep-head
+            content=json.dumps({"truncated":True,"excerpt":content[:head],
+                "tail":content[-tail:] if tail else "",
+                "note":"Observation excerpt only; reread the tool for missing details."},ensure_ascii=False)
+        replacements[index]=content
+        remaining=max(0,remaining-len(content))
     result=[]
     for index,message in enumerate(messages):
-        content=message.get("content","")
-        limit=20000 if index==latest else 7000 if index in recent else 1000
-        if message["role"]=="tool" and limit and len(content)>limit:
-            message={**message,"content":json.dumps({"truncated":True,"excerpt":content[:limit],
-                "note":"Osservazione abbreviata; rileggi lo strumento se servono dettagli mancanti."},ensure_ascii=False)}
+        if index in replacements and replacements[index]!=message.get("content", ""):
+            message={**message,"content":replacements[index]}
         result.append(message)
     return result

@@ -2,10 +2,12 @@
 
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from dataclasses import replace
+from contextlib import nullcontext
 import json
 from pathlib import Path
 import sys
 import threading
+import tempfile
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
@@ -20,7 +22,7 @@ from jarvis.tools.registry import ToolRegistry
 from jarvis.tools.whatsapp import WhatsAppMessageTool
 from jarvis.bootstrap import build_tool_registry
 from jarvis.infrastructure.settings import load_settings
-from tests.support import temporary_project, make_controller
+from tests.support import make_controller
 
 HTML = b'''<!doctype html><html><head><meta charset="utf-8"></head><body>
 <h1>LOCAL LAB FIXTURE - NOT WHATSAPP</h1>
@@ -53,7 +55,13 @@ def main():
     threading.Thread(target=server.serve_forever, daemon=True).start()
     context = TaskContext("whatsapp-local-fixture", threading.Event(), 60)
     report = {"fixture": "local_lab_not_whatsapp", "real_chrome_cdp": True, "external_messages_sent": 0}
-    with temporary_project() as directory:
+    base=ROOT/"data/test-runs"
+    base.mkdir(parents=True,exist_ok=True)
+    # Retain LAB evidence: Windows can protect Chrome cache files even after exit.
+    # The owned browser is still explicitly closed; no user profile is cleaned.
+    with nullcontext(tempfile.mkdtemp(prefix="whatsapp-lab-",dir=base)) as directory:
+        assert Path(directory).resolve().is_relative_to(base.resolve())
+        report["fixture_artifacts"]=str(Path(directory).relative_to(ROOT))
         browser = BrowserController(Path(directory), allowed_origin=f"http://127.0.0.1:{server.server_port}",
                                     profile_name="whatsapp-fixture", headless=True)
         service = WhatsAppBrowser(Path(directory), browser)

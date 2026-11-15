@@ -50,7 +50,23 @@ Gli errori di scrittura o invio non vengono riprovati automaticamente. Dopo un i
 Per WhatsApp usa gli strumenti dedicati prepare_whatsapp_message e send_whatsapp_message. Se manca il testo chiedilo;
 non inventare chi sia 'mio padre': consulta whatsapp_contact o chiedi il nome esatto del contatto.
 Non concludere con 'Ha bisogno d'altro?' o domande di cortesia automatiche.
+Per conti, percentuali e verifica di risultati numerici usa calculate. Non stimare prodotti o arrotondamenti.
 """
+
+
+def conversation_context(history, budget=11000):
+    """Keep the complete current request, including constraints at its start."""
+    selected = []
+    for item in reversed(history):
+        if item.role not in {"user", "assistant"} or budget <= 0:
+            continue
+        limit = min(budget, 8000 if not selected and item.role == "user" else 3000)
+        content = final_text(item.content)
+        content = content if len(content) <= limit else content[:limit]
+        if content:
+            selected.append({"role": item.role, "content": content})
+            budget -= len(content)
+    return list(reversed(selected))
 
 
 def run_agent(controller, context, emit, approve, before_tool) -> str:
@@ -60,23 +76,14 @@ def run_agent(controller, context, emit, approve, before_tool) -> str:
     emit(Event("provider", {"available": True, **status}))
     schemas = controller.tools.schemas(for_model=True)
     messages = [{"role": "system", "content": SYSTEM}]
-    history = []
-    budget = 11000
-    for message in reversed(controller.repository.messages(16)):
-        if message.role in {"user", "assistant"}:
-            content = final_text(message.content)[-min(6000, budget):]
-            if not content or budget <= 0:
-                continue
-            history.append({"role": message.role, "content": content})
-            budget -= len(content)
-    messages.extend(reversed(history))
+    messages.extend(conversation_context(controller.repository.messages(16)))
     previous = next((task for task in controller.repository.tasks(3) if task["id"] != context.task_id), None)
     if previous and previous["status"] == "waiting_input":
         provider.pending_request = previous.get("request_original", "")[:8000]
         messages[0]["content"] += ("\nIncarico in attesa di dati: " + json.dumps(provider.pending_request, ensure_ascii=False)
                                    + ". L'ultima risposta puo' fornire i dati mancanti. Riprendi soltanto questo incarico se pertinente.")
     factual_results = []
-    initial_schemas = [schema for schema in schemas if schema["name"] in SYSTEM_OPERATIONS or schema["name"] in {"open_application", "open_resource", "start_autonomous_chat", "run_research"}]
+    initial_schemas = [schema for schema in schemas if schema["name"] in SYSTEM_OPERATIONS or schema["name"] in {"open_application", "open_resource", "start_autonomous_chat", "run_research", "calculate"}]
     if any(schema["name"] in SYSTEM_OPERATIONS for schema in initial_schemas):
         # Explicit app launches and fresh observations reach the same validated registry.
         calls = provider.select_initial_tools(messages, initial_schemas, context)
@@ -102,13 +109,22 @@ def run_agent(controller, context, emit, approve, before_tool) -> str:
                     from jarvis.research.executor import ResearchExecutor
                     services = controller.tools._tools["research_search"].services
                     return ResearchExecutor(controller,services).run(result.evidence["plan"],context,emit,approve)
-                if call.name in {"open_application", "open_resource"}:
+                if call.name in {"open_application", "open_resource", "calculate"}:
                     summaries.append(result.message)
                 elif result.public_message is not None:
                     summaries.append(result.public_message)
                 else:
                     raise UserError("Lettura Windows priva di un esito verificabile.")
             return "\n\n".join(summaries)
+    if provider.reasoning_mode:
+        emit(Event("reasoning_mode", {"enabled": True}))
+        schemas = [schema for schema in schemas if schema["name"] == "calculate"]
+        messages[0]["content"] += (
+            "\nPer questo problema serve una risposta verificata, non il limite abituale di 1-3 frasi. "
+            "Controlla tutti i vincoli e le dipendenze, considera casi alternativi e verifica la conclusione. "
+            "Distingui dati certi e ipotesi; se il problema e' impossibile o indeterminato dillo. "
+            "Usa calculate per i conti. Mostra soltanto conclusione e una spiegazione verificabile, "
+            "senza catene di pensiero o analisi interne. Non compiere azioni sul computer.")
     memory=WorkingMemory()
     active=False
     def progress():
@@ -128,13 +144,19 @@ def _tool_loop(controller,context,emit,approve,before_tool,provider,schemas,mess
         emit(Event("state", "thinking"))
         emit(Event("stream_start"))
         decide = provider.next_action if provider.requires_execution else provider.chat
-        text, calls, usage = decide(compact_observations(messages), schemas, context, lambda part: emit(Event("stream", part)))
+        publish = (lambda part: None) if provider.reasoning_mode else (lambda part: emit(Event("stream", part)))
+        text, calls, usage = decide(compact_observations(messages), schemas, context, publish)
         emit(Event("usage", usage))
         if not calls and (memory.last_error or memory.needs_file_content):
             recovered=provider.recover_read(messages,schemas,memory.failed_call,context)
             calls=[recovered]
             text=""
         if not calls:
+            if provider.reasoning_mode and text.strip() and not memory.last_error:
+                emit(Event("reasoning_mode", {"enabled": True, "stage": "review"}))
+                text, review_usage = provider.review_answer(messages, final_text(text), context)
+                emit(Event("usage", review_usage))
+                emit(Event("stream", text))
             if provider.requires_execution and provider.step_decision == "ask_user":
                 context.awaiting_input = True
                 answer, blocked = guard_unverified_answer(final_text(text))

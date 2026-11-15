@@ -169,6 +169,9 @@ class Presenter(QObject):
             self.window.set_provider(self.controller.settings.ollama.model, event.data["available"])
             if self.model_status_dialog:
                 self.model_status_dialog.set_status(event.data)
+        elif event.kind == "reasoning_mode":
+            self.window.action_label.setText("Controllo la conclusione e correggo eventuali contraddizioni." if event.data.get("stage")=="review"
+                                             else "Analisi approfondita: verifico vincoli e conclusione. STOP resta disponibile.")
         elif event.kind == "stream_start":
             self.stream_buffer = ""
             self.window.set_stream("")

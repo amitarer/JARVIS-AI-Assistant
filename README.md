@@ -4,6 +4,11 @@ JARVIS usa **Qwen 3.5 9B tramite Ollama**, chat e memoria SQLite, strumenti Wind
 
 ## Avvio
 
+La versione **0.7.2** seleziona il ragionamento approfondito per problemi di logica
+e vincoli, controlla la conclusione prima di mostrarla e verifica i conti con un
+calcolatore esatto. Mantiene rapido il percorso dei comandi semplici. Prove e
+limiti: [ragionamento adattivo](docs/adaptive-reasoning.md).
+
 La versione **0.7.1** aggiunge incarichi operativi in piu' passaggi, letture web
 silenziose e preparazione/invio WhatsApp con conferma del testo esatto.
 Il pulsante **WhatsApp** collega il telefono al profilo dedicato; **Risposte

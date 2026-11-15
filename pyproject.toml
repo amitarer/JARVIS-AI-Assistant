@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "jarvis-desktop"
-version = "0.7.1"
+version = "0.7.2"
 description = "Local Windows assistant with animated overlay, Ollama and voice"
 requires-python = ">=3.12,<3.13"
 dependencies = ["PySide6==6.12.0", "python-dotenv==1.2.4", "openwakeword==0.6.0", "faster-whisper==1.2.1"]
